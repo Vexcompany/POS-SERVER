@@ -1,0 +1,53 @@
+name: Extract V29 archives
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: extract-v29-archives
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify archives
+        run: |
+          test -f "archives/POS server v29.zip"
+          test -f "archives/Admin server v29.zip"
+          unzip -t "archives/POS server v29.zip"
+          unzip -t "archives/Admin server v29.zip"
+
+      - name: Extract archives
+        run: |
+          mkdir -p extracted/pos-server-v29 extracted/admin-server-v29
+          unzip -oq "archives/POS server v29.zip" -d extracted/pos-server-v29
+          unzip -oq "archives/Admin server v29.zip" -d extracted/admin-server-v29
+          echo "POS server files:"
+          find extracted/pos-server-v29 -type f | wc -l
+          echo "Admin server files:"
+          find extracted/admin-server-v29 -type f | wc -l
+          du -sh extracted/pos-server-v29 extracted/admin-server-v29
+
+      - name: Commit extracted source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add extracted/
+          if git diff --cached --quiet; then
+            echo "Extracted files are already up to date."
+            exit 0
+          fi
+          git commit -m "Extract POS and Admin Server V29 archives"
+          git push
