@@ -1,4 +1,4 @@
-name: Extract V29 archives
+name: Extract and inspect V29 archives
 
 on:
   push:
@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  extract:
+  extract-and-decompile:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,28 +26,58 @@ jobs:
         run: |
           test -f "archives/POS server v29.zip"
           test -f "archives/Admin server v29.zip"
-          unzip -t "archives/POS server v29.zip"
-          unzip -t "archives/Admin server v29.zip"
+          unzip -t "archives/POS server v29.zip" >/dev/null
+          unzip -t "archives/Admin server v29.zip" >/dev/null
+          echo "Both ZIP archives passed integrity checks."
 
       - name: Extract archives
         run: |
           mkdir -p extracted/pos-server-v29 extracted/admin-server-v29
           unzip -oq "archives/POS server v29.zip" -d extracted/pos-server-v29
           unzip -oq "archives/Admin server v29.zip" -d extracted/admin-server-v29
-          echo "POS server files:"
-          find extracted/pos-server-v29 -type f | wc -l
-          echo "Admin server files:"
-          find extracted/admin-server-v29 -type f | wc -l
-          du -sh extracted/pos-server-v29 extracted/admin-server-v29
+          echo "POS files: $(find extracted/pos-server-v29 -type f | wc -l)"
+          echo "Admin files: $(find extracted/admin-server-v29 -type f | wc -l)"
 
-      - name: Commit extracted source
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Decompile application JARs for audit
+        run: |
+          curl -fsSL https://www.benf.org/other/cfr/cfr-0.152.jar -o /tmp/cfr.jar
+          mkdir -p decompiled/pos-server-v29 decompiled/admin-server-v29
+          java -jar /tmp/cfr.jar "extracted/pos-server-v29/POS server v29/minimarket.jar" --outputdir decompiled/pos-server-v29
+          java -jar /tmp/cfr.jar "extracted/admin-server-v29/Admin server v29/minimarket.jar" --outputdir decompiled/admin-server-v29
+          echo "POS decompiled Java files: $(find decompiled/pos-server-v29 -type f -name '*.java' | wc -l)"
+          echo "Admin decompiled Java files: $(find decompiled/admin-server-v29 -type f -name '*.java' | wc -l)"
+
+      - name: Write audit inventory
+        run: |
+          {
+            echo "# V29 archive inventory"
+            echo
+            echo "- POS archive integrity: OK"
+            echo "- Admin archive integrity: OK"
+            echo "- POS extracted files: $(find extracted/pos-server-v29 -type f | wc -l)"
+            echo "- Admin extracted files: $(find extracted/admin-server-v29 -type f | wc -l)"
+            echo "- POS Java files decompiled: $(find decompiled/pos-server-v29 -type f -name '*.java' | wc -l)"
+            echo "- Admin Java files decompiled: $(find decompiled/admin-server-v29 -type f -name '*.java' | wc -l)"
+            echo
+            echo "## Runtime bundle contents"
+            find extracted -type f | sed 's#^#- #' | head -300
+          } > AUDIT-INVENTORY.md
+
+      - name: Commit audit output
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add extracted/
+          git add extracted/ decompiled/ AUDIT-INVENTORY.md
           if git diff --cached --quiet; then
-            echo "Extracted files are already up to date."
+            echo "Audit output is already up to date."
             exit 0
           fi
-          git commit -m "Extract POS and Admin Server V29 archives"
+          git commit -m "Extract and decompile V29 applications for audit"
+          git pull --rebase origin main
           git push
