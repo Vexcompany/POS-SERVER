@@ -303,10 +303,11 @@ extends JDialog {
         this.harga2Field.setValue(this.barang.getHargaJual2());
         this.harga3Field.setValue(this.barang.getHargaJual3());
         float stokTotal = 0.0f;
-        String result = this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetailOnProgress(this.barang.getId(), 1);
-        String hide = this.konstantaService.getConstantValue("hideStock");
+        if (result == null) {
+            result = "";
+        }
         String textHide = "Stok disembunyikan sedang SOM";
-        if (hide.equals("YES")) {
+        if (hide != null && hide.equals("YES")) {
             result = "YES";
             textHide = "Stok disembunyikan beberapa saat";
         }
