@@ -794,7 +794,7 @@ extends JPanel {
             }
 
             StokOpnamMandiriDetail somd = StokOpnamMandiriPanel.this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetail(Long.parseLong(rowValue[0].toString()));
-            Barang tempbarang = StokOpnamMandiriPanel.this.barangService.getBarang(selectedBarangId);
+            Barang tempbarang = StokOpnamMandiriPanel.this.barangService.getBarangById(selectedBarangId);
             if (somd == null || tempbarang == null) {
                 JOptionPane.showMessageDialog(null, "Data barang gagal dimuat. Perubahan belum disimpan.");
                 return;
