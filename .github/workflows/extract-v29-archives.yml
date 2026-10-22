@@ -3,6 +3,8 @@ name: Extract and inspect V29 archives
 on:
   push:
     branches: [main]
+    paths:
+      - 'archives/**'
   workflow_dispatch:
 
 permissions:
