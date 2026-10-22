@@ -6,8 +6,6 @@ package minimart.ui.view;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
@@ -17,8 +15,6 @@ import javax.swing.JDialog;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingWorker;
-import javax.swing.Timer;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle;
@@ -61,9 +57,6 @@ extends JDialog {
     private StokOpnamMandiriDetailService stokOpnamMandiriDetailService = new StokOpnamMandiriDetailService();
     private KonstantaService konstantaService = new KonstantaService();
     private static final int SOM_HIDE_N_DAYS = 1;
-    private Timer loadFieldTimer;
-    private int pendingFieldRow;
-    private int loadFieldRequestId;
 
     public SearchPanelBarang(Frame parent, boolean modal, DefaultTableModel dtm, String title) {
         super(parent, modal);
@@ -71,16 +64,6 @@ extends JDialog {
         this.initComponents();
         this.dtm = dtm;
         this.searchTable.setModel(dtm);
-        this.loadFieldTimer = new Timer(90, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent evt) {
-                SearchPanelBarang.this.loadFieldAsync(
-                    SearchPanelBarang.this.pendingFieldRow,
-                    SearchPanelBarang.this.loadFieldRequestId
-                );
-            }
-        });
-        this.loadFieldTimer.setRepeats(false);
         this.sat1Lbl.setText("");
         this.sat2Lbl.setText("");
         this.sat3Lbl.setText("");
@@ -180,13 +163,7 @@ extends JDialog {
 
     private void searchTableKeyPressed(KeyEvent evt) {
         if (evt.getKeyCode() == 10) {
-            int selectedRow = this.searchTable.getSelectedRow();
-            if (selectedRow < 0 || selectedRow >= this.dtm.getRowCount()) {
-                return;
-            }
-            this.loadFieldTimer.stop();
-            ++this.loadFieldRequestId;
-            this.listener.tableClick(this.dtm.getValueAt(selectedRow, 0).toString());
+            this.listener.tableClick(this.dtm.getValueAt(this.searchTable.getSelectedRow(), 0).toString());
             this.dispose();
         } else if (evt.getKeyCode() == 40) {
             int row = 0;
@@ -208,8 +185,6 @@ extends JDialog {
             this.loadField(row);
         }
         if (evt.getKeyCode() == 27) {
-            this.loadFieldTimer.stop();
-            ++this.loadFieldRequestId;
             this.dispose();
         }
     }
@@ -220,75 +195,7 @@ extends JDialog {
     }
 
     private void loadField(int row) {
-        if (this.dtm == null || this.dtm.getRowCount() == 0) {
-            return;
-        }
-        if (row < 0) {
-            row = 0;
-        } else if (row >= this.dtm.getRowCount()) {
-            row = this.dtm.getRowCount() - 1;
-        }
-
-        this.pendingFieldRow = row;
-        ++this.loadFieldRequestId;
-        this.barang = null;
-        this.sat1Lbl.setText("");
-        this.sat2Lbl.setText("");
-        this.sat3Lbl.setText("");
-        this.sat1StokLbl.setText("");
-        this.sat2StokLbl.setText("");
-        this.sat3StokLbl.setText("");
-        this.harga1Field.setValue(0);
-        this.harga2Field.setValue(0);
-        this.harga3Field.setValue(0);
-        this.grosirField.setValue(0);
-        this.minLbl.setText("00.0");
-        this.stok1Field.setText("0");
-        this.stok2Field.setText("0");
-        this.stok3Field.setText("0");
-        this.labelSO.setText("");
-        this.loadFieldTimer.restart();
-    }
-
-    private void loadFieldAsync(final int row, final int requestId) {
-        final String productId = this.dtm.getValueAt(row, 0).toString();
-        new SwingWorker<Object[], Void>() {
-            @Override
-            protected Object[] doInBackground() {
-                Barang selectedBarang = SearchPanelBarang.this.barangService.getBarangForPreview(productId);
-                if (selectedBarang == null) {
-                    return new Object[]{null, "", ""};
-                }
-                String somStatus = SearchPanelBarang.this.stokOpnamMandiriDetailService
-                    .getStokOpnamMandiriDetailOnProgress(selectedBarang.getId(), 1);
-                String hideStock = SearchPanelBarang.this.konstantaService.getConstantValue("hideStock");
-                return new Object[]{selectedBarang, somStatus, hideStock};
-            }
-
-            @Override
-            protected void done() {
-                if (requestId != SearchPanelBarang.this.loadFieldRequestId
-                        || !SearchPanelBarang.this.isDisplayable()) {
-                    return;
-                }
-                try {
-                    Object[] data = this.get();
-                    if (data[0] == null) {
-                        SearchPanelBarang.this.labelSO.setText("Data barang gagal dimuat");
-                        return;
-                    }
-                    SearchPanelBarang.this.applyField(
-                        row, (Barang)data[0], (String)data[1], (String)data[2]
-                    );
-                } catch (Exception ex) {
-                    SearchPanelBarang.this.labelSO.setText("Gagal memuat detail barang");
-                }
-            }
-        }.execute();
-    }
-
-    private void applyField(int row, Barang selectedBarang, String result, String hide) {
-        this.barang = selectedBarang;
+        this.barang = this.barangService.getBarang(this.dtm.getValueAt(row, 0).toString());
         this.sat1Lbl.setText(this.barang.getSatuan1());
         if (this.barang.getSatuan2().equals("")) {
             this.sat2Lbl.setText("");
@@ -303,11 +210,10 @@ extends JDialog {
         this.harga2Field.setValue(this.barang.getHargaJual2());
         this.harga3Field.setValue(this.barang.getHargaJual3());
         float stokTotal = 0.0f;
-        if (result == null) {
-            result = "";
-        }
+        String result = this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetailOnProgress(this.barang.getId(), 1);
+        String hide = this.konstantaService.getConstantValue("hideStock");
         String textHide = "Stok disembunyikan sedang SOM";
-        if (hide != null && hide.equals("YES")) {
+        if (hide.equals("YES")) {
             result = "YES";
             textHide = "Stok disembunyikan beberapa saat";
         }
