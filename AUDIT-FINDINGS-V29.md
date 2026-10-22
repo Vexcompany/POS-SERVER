@@ -8,11 +8,12 @@
 
 Two candidate fixes are already available as separate draft PRs:
 
-- [Draft PR #1 — Stock Opname product identity](https://github.com/Vexcompany/POS-SERVER/pull/1)
-- [Draft PR #2 — Responsive product-search preview](https://github.com/Vexcompany/POS-SERVER/pull/2)
-- [Draft PR #4 — SOM progress lookup with multiple matches](https://github.com/Vexcompany/POS-SERVER/pull/4)
+- [PR #1 — Stock Opname product identity](https://github.com/Vexcompany/POS-SERVER/pull/1) — merged; candidate patch is being restored after the archive workflow regenerated the decompiled tree.
+- [PR #5 — Responsive product-search preview](https://github.com/Vexcompany/POS-SERVER/pull/5) — merged.
+- [PR #4 — SOM progress lookup with multiple matches](https://github.com/Vexcompany/POS-SERVER/pull/4) — merged; candidate patch is being restored after the archive workflow regenerated the decompiled tree.
+- [PR #6 — Prevent workflow overwrites](https://github.com/Vexcompany/POS-SERVER/pull/6) — merged; automatic regeneration now runs only when archives change or is manually dispatched.
 
-Both remain **draft / not merged**. The audit found additional risks that should be addressed or explicitly tested before production deployment.
+The original PR #2 was closed as superseded by PR #5 after a merge conflict. The candidate code remains based on decompiled Java and is not yet compiled or runtime-validated.
 
 ## Findings
 
@@ -38,7 +39,7 @@ Several DAO/service methods catch database exceptions and return `0` or `null`. 
 
 The existing edit path searched the SOM table using column 0 even though column 0 is the SOM detail ID and column 1 is the product ID. The save handler also loaded stock/HPP using the detail's existing product ID instead of the newly selected product ID, and did not update the detail's product ID. This is a concrete candidate for the reported A4/F4 stale-product symptom.
 
-Candidate correction is in [Draft PR #1](https://github.com/Vexcompany/POS-SERVER/pull/1). A second static review also replaced the ambiguous `getBarang(String)` lookup with a direct `m_barang.ID = ?` lookup for this edit path, since the generic method matches either barcode or product ID. It still needs build and safe database verification.
+Candidate correction was merged in [PR #1](https://github.com/Vexcompany/POS-SERVER/pull/1) and is being restored after the archive workflow regenerated the decompiled tree. A second static review also replaced the ambiguous `getBarang(String)` lookup with a direct `m_barang.ID = ?` lookup for this edit path, since the generic method matches either barcode or product ID. It still needs build and safe database verification.
 
 ### P1 — Product search preview blocks the Swing UI thread
 
@@ -46,7 +47,7 @@ Candidate correction is in [Draft PR #1](https://github.com/Vexcompany/POS-SERVE
 
 The original preview handler performs synchronous database lookups from keyboard navigation. It retrieves a product plus multiple barcode lookups and Stock Opname/constant status, which can stall the Swing event-dispatch thread for each row movement.
 
-Candidate correction is in [Draft PR #2](https://github.com/Vexcompany/POS-SERVER/pull/2): a lightweight product lookup, debounce, and `SwingWorker` background loading. It remains uncompiled and untested in the actual application.
+Candidate correction was merged in [PR #5](https://github.com/Vexcompany/POS-SERVER/pull/5): a lightweight product lookup, debounce, and `SwingWorker` background loading. It remains uncompiled and untested in the actual application.
 
 ### P2 — Rack filter argument is ignored by the product DAO query
 
@@ -62,7 +63,7 @@ The method accepts `rak` and normalizes it, but the SQL filters by product type 
 
 The query can return multiple rows for the same product when it appears in more than one unsubmitted Stock Opname. The method uses `queryForObject()`, catches the resulting data-access exception, and returns an empty string.
 
-**Risk:** Multiple matching records can be treated like no active Stock Opname, potentially causing the UI to show stock when it should be hidden or fail to flag a product as in progress. [Draft PR #4](https://github.com/Vexcompany/POS-SERVER/pull/4) adds `LIMIT 1` because the caller only needs to know whether any qualifying row exists. This is a candidate static fix; validate the multiple-active-SOM business rule in a disposable database before merge.
+**Risk:** Multiple matching records can be treated like no active Stock Opname, potentially causing the UI to show stock when it should be hidden or fail to flag a product as in progress. [PR #4](https://github.com/Vexcompany/POS-SERVER/pull/4) added `LIMIT 1` because the caller only needs to know whether any qualifying row exists; the patch is being restored after the archive workflow regenerated the decompiled tree. Validate the multiple-active-SOM business rule in a disposable database before deployment.
 
 ### P2 — Batch-update DAO method is an explicit runtime failure
 
@@ -127,9 +128,9 @@ When loading each product row for the Toko location, the UI calls `getStokBarang
 
 ## Status
 
-- Draft PR #1: candidate Stock Opname identity fix; static inspection only.
-- Draft PR #2: candidate product-search responsiveness fix; static inspection only.
-- Draft PR #3: consolidated audit findings and validation plan.
-- Draft PR #4: candidate fix for multiple active SOM rows; static SQL review only.
-- This report documents further findings; it does not apply any production changes.
-- No PR has been merged and no operational POS database has been modified by this audit.
+- PR #1 and PR #4 were merged, but an automatic archive/decompilation workflow regenerated the decompiled tree and overwrote their candidate code; this branch restores those changes.
+- PR #5 contains the product-search responsiveness candidate.
+- PR #6 prevents ordinary code/documentation merges from automatically regenerating the decompiled tree.
+- PR #3 (this report) has been merged; this branch updates its status and links.
+- All code changes remain static candidates based on CFR-decompiled Java. They have not been compiled or runtime-tested.
+- No operational POS database has been modified by this audit.

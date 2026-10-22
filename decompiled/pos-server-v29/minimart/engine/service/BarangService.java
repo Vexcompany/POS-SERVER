@@ -27,6 +27,14 @@ public class BarangService {
         return barang;
     }
 
+    public Barang getBarangById(String id) {
+        return this.barangDao.getBarangById(id);
+    }
+
+    public Barang getBarangForPreview(String id) {
+        return this.barangDao.getBarangForPreview(id);
+    }
+
     public List<Barang> getBsBarangs(String jenis) {
         return this.barangDao.getBsBarangs(jenis);
     }
