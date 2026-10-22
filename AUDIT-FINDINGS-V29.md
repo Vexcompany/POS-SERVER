@@ -85,6 +85,24 @@ Several DAO methods catch `DataAccessException`, print only the exception messag
 
 **Recommendation:** Add structured logging with operation and entity identifiers (excluding credentials and sensitive customer data), and propagate a clear success/failure result to the UI. Avoid changing this globally in one patch; review call sites so failure handling remains compatible.
 
+### P1 — Saving an input revision is split across two independent updates
+
+**File:** `decompiled/pos-server-v29/minimart/ui/view/StokOpnamMandiriPanel.java`, method `saveButtonActionPerformed(...)`; DAO methods `updateRevisi1(...)` and `updateRevisi2(...)`.
+
+The UI sets the parent Stock Opname's `tanggalInputN` timestamp and updates the parent row first. It then separately copies revision values to the next input using `updateRevisi1` or `updateRevisi2`. If the second operation fails, the first timestamp may already be persisted. A subsequent save can then hit the “input already saved, refresh data” guard, even though the revision-copy operation failed.
+
+The UI also treats an update count of zero as failure. Depending on the database driver's affected-row semantics, a successful update that does not change any values can report zero, so this condition needs verification.
+
+**Recommendation:** Save the input timestamp and its corresponding detail-row revision copy in one transaction. Check SQL execution/exception status separately from “rows changed,” and show a recoverable error without marking the input complete when either step fails.
+
+### P1 — Final Stock Opname ID is allocated with a non-atomic MAX-like lookup
+
+**Files:** `decompiled/pos-server-v29/minimart/ui/view/StokOpnamMandiriPanel.java`, method `simpanDataFinal()`; `decompiled/pos-server-v29/minimart/engine/daoimpl/StokOpnamDaoImpl.java`, method `getLastId()`.
+
+Final submission assigns the new stock-opname ID using `getLastId() + 1`. The DAO selects the highest existing ID, and if that query throws an exception it catches the error and returns the default value `0`. This approach is not safe against two concurrent submissions: both can read the same highest ID and attempt to insert the same next ID. A database lookup failure can also lead to an attempted ID of `1`.
+
+**Recommendation:** Use a database-generated auto-increment/sequence key where schema compatibility allows, or allocate IDs through a transaction-safe mechanism with a uniqueness constraint and explicit retry/error handling. Never interpret failure to read the last ID as an empty table.
+
 ## Validation plan before release
 
 1. Recover the original source project or document a reproducible, verified build path for the exact deployed V29 runtime.
