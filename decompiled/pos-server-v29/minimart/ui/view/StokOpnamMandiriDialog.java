@@ -207,7 +207,8 @@ extends JDialog {
 
     private void searchTable(String idBarang) {
         for (int a = 0; a < this.soTableModel.getRowCount(); ++a) {
-            String barangId = this.soTableModel.getValueAt(a, 0).toString();
+            // Column 0 is the SOM detail ID; column 1 is the product ID.
+            String barangId = this.soTableModel.getValueAt(a, 1).toString();
             if (!idBarang.equals(barangId)) continue;
             this.loadDataFromTable(a);
             break;
