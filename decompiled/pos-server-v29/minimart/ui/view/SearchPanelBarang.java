@@ -70,155 +70,94 @@ public class SearchPanelBarang extends JDialog {
         this.initComponents();
         this.dtm = dtm;
         this.searchTable.setModel(dtm);
-        this.sat1Lbl.setText("");
-        this.sat2Lbl.setText("");
-        this.sat3Lbl.setText("");
-        this.sat1StokLbl.setText("");
-        this.sat2StokLbl.setText("");
-        this.sat3StokLbl.setText("");
+        this.sat1Lbl.setText(""); this.sat2Lbl.setText(""); this.sat3Lbl.setText("");
+        this.sat1StokLbl.setText(""); this.sat2StokLbl.setText(""); this.sat3StokLbl.setText("");
         this.minLbl.setText("00.0");
         TableColumn col1 = this.searchTable.getColumnModel().getColumn(1);
         TableColumn col2 = this.searchTable.getColumnModel().getColumn(2);
         TableColumn col3 = this.searchTable.getColumnModel().getColumn(3);
-        int width = 35;
-        col1.setPreferredWidth(220);
-        col2.setPreferredWidth(5);
-        col3.setPreferredWidth(width);
+        col1.setPreferredWidth(220); col2.setPreferredWidth(5); col3.setPreferredWidth(35);
     }
 
-    public void addSearchPanelListener(SearchPanelListener listener) {
-        this.listener = listener;
-    }
+    public void addSearchPanelListener(SearchPanelListener listener) { this.listener = listener; }
 
     private void initComponents() {
-        this.jScrollPane1 = new JScrollPane();
-        this.searchTable = new JTable();
-        this.hargaLbl = new JLabel();
-        this.grosirLbl = new JLabel();
-        this.sat1Lbl = new JLabel();
-        this.minLbl = new JLabel();
-        this.sat2Lbl = new JLabel();
-        this.sat3Lbl = new JLabel();
-        this.sat1StokLbl = new JLabel();
-        this.sat2StokLbl = new JLabel();
-        this.sat3StokLbl = new JLabel();
-        this.stok1Field = new JTextField();
-        this.stok2Field = new JTextField();
-        this.stok3Field = new JTextField();
-        this.stokLbl = new JLabel();
-        this.harga1Field = new JFormattedTextField();
-        this.harga2Field = new JFormattedTextField();
-        this.harga3Field = new JFormattedTextField();
-        this.grosirField = new JFormattedTextField();
-        this.labelSO = new JLabel();
+        this.jScrollPane1 = new JScrollPane(); this.searchTable = new JTable(); this.hargaLbl = new JLabel(); this.grosirLbl = new JLabel();
+        this.sat1Lbl = new JLabel(); this.minLbl = new JLabel(); this.sat2Lbl = new JLabel(); this.sat3Lbl = new JLabel();
+        this.sat1StokLbl = new JLabel(); this.sat2StokLbl = new JLabel(); this.sat3StokLbl = new JLabel();
+        this.stok1Field = new JTextField(); this.stok2Field = new JTextField(); this.stok3Field = new JTextField(); this.stokLbl = new JLabel();
+        this.harga1Field = new JFormattedTextField(); this.harga2Field = new JFormattedTextField(); this.harga3Field = new JFormattedTextField(); this.grosirField = new JFormattedTextField(); this.labelSO = new JLabel();
         this.setDefaultCloseOperation(2);
         this.searchTable.setModel(new DefaultTableModel(new Object[0][], new String[0]));
-        this.searchTable.addMouseListener(new MouseAdapter(){
-            @Override public void mouseClicked(MouseEvent evt) { SearchPanelBarang.this.searchTableMouseClicked(evt); }
-        });
-        this.searchTable.addKeyListener(new KeyAdapter(){
-            @Override public void keyPressed(KeyEvent evt) { SearchPanelBarang.this.searchTableKeyPressed(evt); }
-        });
+        this.searchTable.addMouseListener(new MouseAdapter(){ @Override public void mouseClicked(MouseEvent evt){ SearchPanelBarang.this.searchTableMouseClicked(evt); } });
+        this.searchTable.addKeyListener(new KeyAdapter(){ @Override public void keyPressed(KeyEvent evt){ SearchPanelBarang.this.searchTableKeyPressed(evt); } });
         this.jScrollPane1.setViewportView(this.searchTable);
-        this.hargaLbl.setFont(new Font("Tahoma", 0, 14));
-        this.hargaLbl.setText("HARGA");
-        this.grosirLbl.setFont(new Font("Tahoma", 0, 14));
-        this.grosirLbl.setText("GROSIR");
-        this.sat1Lbl.setFont(new Font("Tahoma", 0, 14)); this.sat1Lbl.setText("SAT1");
-        this.minLbl.setFont(new Font("Tahoma", 0, 14)); this.minLbl.setText("MIN");
-        this.sat2Lbl.setFont(new Font("Tahoma", 0, 14)); this.sat2Lbl.setText("SAT2");
-        this.sat3Lbl.setFont(new Font("Tahoma", 0, 14)); this.sat3Lbl.setText("SAT3");
+        this.hargaLbl.setFont(new Font("Tahoma",0,14)); this.hargaLbl.setText("HARGA");
+        this.grosirLbl.setFont(new Font("Tahoma",0,14)); this.grosirLbl.setText("GROSIR");
+        this.sat1Lbl.setFont(new Font("Tahoma",0,14)); this.sat1Lbl.setText("SAT1"); this.minLbl.setFont(new Font("Tahoma",0,14)); this.minLbl.setText("MIN");
+        this.sat2Lbl.setFont(new Font("Tahoma",0,14)); this.sat2Lbl.setText("SAT2"); this.sat3Lbl.setFont(new Font("Tahoma",0,14)); this.sat3Lbl.setText("SAT3");
         this.sat1StokLbl.setText("SAT1"); this.sat2StokLbl.setText("SAT2"); this.sat3StokLbl.setText("SAT3");
-        this.stok1Field.setEditable(false); this.stok1Field.setText("0");
-        this.stok2Field.setEditable(false); this.stok2Field.setText("0");
-        this.stok3Field.setEditable(false); this.stok3Field.setText("0");
-        this.stokLbl.setText("STOK:");
-        this.harga1Field.setText("0"); this.harga1Field.setFont(new Font("Tahoma", 0, 14));
-        this.harga2Field.setText("0"); this.harga2Field.setFont(new Font("Tahoma", 0, 14));
-        this.harga3Field.setText("0"); this.harga3Field.setFont(new Font("Tahoma", 0, 14));
-        this.grosirField.setText("0"); this.grosirField.setFont(new Font("Tahoma", 0, 14));
-        this.labelSO.setFont(new Font("Tahoma", 1, 18)); this.labelSO.setForeground(new Color(255, 51, 0));
-        GroupLayout layout = new GroupLayout(this.getContentPane());
-        this.getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(this.jScrollPane1, -1, 780, Short.MAX_VALUE).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addComponent(this.grosirLbl).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addComponent(this.minLbl)).addComponent(this.hargaLbl)).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false).addComponent(this.harga1Field).addComponent(this.grosirField, -1, 127, Short.MAX_VALUE)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addComponent(this.sat1Lbl).addGap(27, 27, 27).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING, false).addComponent(this.harga3Field).addComponent(this.harga2Field, -2, 123, -2)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addComponent(this.sat2Lbl).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, -1, Short.MAX_VALUE).addComponent(this.stokLbl)).addComponent(this.sat3Lbl))).addGroup(layout.createSequentialGroup().addComponent(this.labelSO, -2, 437, -2).addGap(0, 0, Short.MAX_VALUE))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING, false).addGroup(layout.createSequentialGroup().addComponent(this.stok3Field).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat3StokLbl, -2, 66, -2)).addGroup(layout.createSequentialGroup().addComponent(this.stok1Field, -2, 48, -2).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat1StokLbl, -2, 66, -2)).addGroup(layout.createSequentialGroup().addComponent(this.stok2Field, -2, 48, -2).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat2StokLbl, -2, 66, -2))))).addContainerGap()));
-        layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(this.jScrollPane1, -2, 523, -2).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat1StokLbl).addComponent(this.stok1Field, -2, -1, -2).addComponent(this.stokLbl)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat2StokLbl).addComponent(this.stok2Field, -2, -1, -2)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat3StokLbl).addComponent(this.stok3Field, -2, -1, -2)).addGap(0, 5, Short.MAX_VALUE)).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.hargaLbl).addComponent(this.sat1Lbl).addComponent(this.harga1Field, -2, -1, -2)).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.grosirLbl).addComponent(this.minLbl))).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.harga2Field, -2, -1, -2).addComponent(this.sat2Lbl)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(this.grosirField, -2, -1, -2).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.harga3Field, -2, -1, -2).addComponent(this.sat3Lbl))))).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.labelSO, -1, -1, Short.MAX_VALUE))).addContainerGap()));
+        this.stok1Field.setEditable(false); this.stok1Field.setText("0"); this.stok2Field.setEditable(false); this.stok2Field.setText("0"); this.stok3Field.setEditable(false); this.stok3Field.setText("0"); this.stokLbl.setText("STOK:");
+        this.harga1Field.setText("0"); this.harga1Field.setFont(new Font("Tahoma",0,14)); this.harga2Field.setText("0"); this.harga2Field.setFont(new Font("Tahoma",0,14)); this.harga3Field.setText("0"); this.harga3Field.setFont(new Font("Tahoma",0,14)); this.grosirField.setText("0"); this.grosirField.setFont(new Font("Tahoma",0,14));
+        this.labelSO.setFont(new Font("Tahoma",1,18)); this.labelSO.setForeground(new Color(255,51,0));
+        GroupLayout layout = new GroupLayout(this.getContentPane()); this.getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(this.jScrollPane1,-1,780,Short.MAX_VALUE).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addComponent(this.grosirLbl).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addComponent(this.minLbl)).addComponent(this.hargaLbl)).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING,false).addComponent(this.harga1Field).addComponent(this.grosirField,-1,127,Short.MAX_VALUE)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addComponent(this.sat1Lbl).addGap(27,27,27).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING,false).addComponent(this.harga3Field).addComponent(this.harga2Field,-2,123,-2)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addComponent(this.sat2Lbl).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED,-1,Short.MAX_VALUE).addComponent(this.stokLbl)).addComponent(this.sat3Lbl))).addGroup(layout.createSequentialGroup().addComponent(this.labelSO,-2,437,-2).addGap(0,0,Short.MAX_VALUE))).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.TRAILING,false).addGroup(layout.createSequentialGroup().addComponent(this.stok3Field).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat3StokLbl,-2,66,-2)).addGroup(layout.createSequentialGroup().addComponent(this.stok1Field,-2,48,-2).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat1StokLbl,-2,66,-2)).addGroup(layout.createSequentialGroup().addComponent(this.stok2Field,-2,48,-2).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.sat2StokLbl,-2,66,-2))))).addContainerGap()));
+        layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addContainerGap().addComponent(this.jScrollPane1,-2,523,-2).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat1StokLbl).addComponent(this.stok1Field,-2,-1,-2).addComponent(this.stokLbl)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat2StokLbl).addComponent(this.stok2Field,-2,-1,-2)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.sat3StokLbl).addComponent(this.stok3Field,-2,-1,-2)).addGap(0,5,Short.MAX_VALUE)).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.hargaLbl).addComponent(this.sat1Lbl).addComponent(this.harga1Field,-2,-1,-2)).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.grosirLbl).addComponent(this.minLbl))).addGroup(layout.createSequentialGroup().addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.harga2Field,-2,-1,-2).addComponent(this.sat2Lbl)).addPreferredGap(LayoutStyle.ComponentPlacement.RELATED).addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING).addComponent(this.grosirField,-2,-1,-2).addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE).addComponent(this.harga3Field,-2,-1,-2).addComponent(this.sat3Lbl))))).addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(this.labelSO,-1,-1,Short.MAX_VALUE))).addContainerGap()));
         this.pack();
     }
 
     private void searchTableKeyPressed(KeyEvent evt) {
-        if (evt.getKeyCode() == 10) {
-            int selectedRow = this.searchTable.getSelectedRow();
-            if (selectedRow < 0 || selectedRow >= this.dtm.getRowCount()) return;
-            ++this.loadFieldRequestId;
-            this.listener.tableClick(this.dtm.getValueAt(selectedRow, 0).toString());
-            this.dispose();
-        } else if (evt.getKeyCode() == 40) {
-            this.loadField(this.searchTable.getSelectedRow() + 1);
-        } else if (evt.getKeyCode() == 38) {
-            this.loadField(this.searchTable.getSelectedRow() - 1);
-        }
-        if (evt.getKeyCode() == 27) {
-            ++this.loadFieldRequestId;
-            this.dispose();
-        }
+        if (evt.getKeyCode()==10) {
+            int selectedRow=this.searchTable.getSelectedRow(); if(selectedRow<0||selectedRow>=this.dtm.getRowCount()) return;
+            ++this.loadFieldRequestId; this.listener.tableClick(this.dtm.getValueAt(selectedRow,0).toString()); this.dispose();
+        } else if(evt.getKeyCode()==40) this.loadField(this.searchTable.getSelectedRow()+1);
+        else if(evt.getKeyCode()==38) this.loadField(this.searchTable.getSelectedRow()-1);
+        if(evt.getKeyCode()==27){++this.loadFieldRequestId;this.dispose();}
     }
+    private void searchTableMouseClicked(MouseEvent evt){this.loadField(this.searchTable.getSelectedRow());}
 
-    private void searchTableMouseClicked(MouseEvent evt) { this.loadField(this.searchTable.getSelectedRow()); }
-
-    private void loadField(int row) {
-        if (this.dtm == null || this.dtm.getRowCount() == 0) return;
-        if (row < 0) row = 0;
-        else if (row >= this.dtm.getRowCount()) row = this.dtm.getRowCount() - 1;
-        final int selectedRow = row;
-        final int requestId = ++this.loadFieldRequestId;
-        final String productId = this.dtm.getValueAt(selectedRow, 0).toString();
-        Barang cached = this.previewCache.get(productId);
-        if (cached != null) {
-            this.applyField(selectedRow, cached, "", "");
-            return;
-        }
-        this.barang = null;
-        this.labelSO.setText("Memuat...");
-        new SwingWorker<Object[], Void>() {
-            @Override protected Object[] doInBackground() {
-                Barang selectedBarang = SearchPanelBarang.this.barangService.getBarangForPreview(productId);
-                if (selectedBarang == null) return new Object[]{null, "", ""};
-                String somStatus = SearchPanelBarang.this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetailOnProgress(selectedBarang.getId(), SOM_HIDE_N_DAYS);
-                String hideStock = SearchPanelBarang.this.konstantaService.getConstantValue("hideStock");
-                return new Object[]{selectedBarang, somStatus, hideStock};
+    private void loadField(int row){
+        if(this.dtm==null||this.dtm.getRowCount()==0)return;
+        if(row<0)row=0; else if(row>=this.dtm.getRowCount())row=this.dtm.getRowCount()-1;
+        final int selectedRow=row; final int requestId=++this.loadFieldRequestId; final String productId=this.dtm.getValueAt(selectedRow,0).toString();
+        Barang cached=this.previewCache.get(productId);
+        if(cached!=null){this.applyField(selectedRow,cached,"","");this.prefetchAround(selectedRow);return;}
+        this.barang=null; this.labelSO.setText("Memuat...");
+        new SwingWorker<Object[],Void>(){
+            @Override protected Object[] doInBackground(){
+                Barang selectedBarang=SearchPanelBarang.this.barangService.getBarangForPreview(productId);
+                if(selectedBarang==null)return new Object[]{null,"",""};
+                String somStatus=SearchPanelBarang.this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetailOnProgress(selectedBarang.getId(),SOM_HIDE_N_DAYS);
+                String hideStock=SearchPanelBarang.this.konstantaService.getConstantValue("hideStock");
+                return new Object[]{selectedBarang,somStatus,hideStock};
             }
-            @Override protected void done() {
-                if (requestId != SearchPanelBarang.this.loadFieldRequestId || !SearchPanelBarang.this.isDisplayable()) return;
-                try {
-                    Object[] data = this.get();
-                    if (data[0] == null) { SearchPanelBarang.this.labelSO.setText("Data barang gagal dimuat"); return; }
-                    Barang selectedBarang = (Barang)data[0];
-                    SearchPanelBarang.this.previewCache.put(productId, selectedBarang);
-                    SearchPanelBarang.this.applyField(selectedRow, selectedBarang, (String)data[1], (String)data[2]);
-                } catch (Exception ex) { SearchPanelBarang.this.labelSO.setText("Gagal memuat detail barang"); }
+            @Override protected void done(){
+                if(requestId!=SearchPanelBarang.this.loadFieldRequestId||!SearchPanelBarang.this.isDisplayable())return;
+                try{Object[] data=this.get();if(data[0]==null){SearchPanelBarang.this.labelSO.setText("Data barang gagal dimuat");return;} Barang selectedBarang=(Barang)data[0];SearchPanelBarang.this.previewCache.put(productId,selectedBarang);SearchPanelBarang.this.applyField(selectedRow,selectedBarang,(String)data[1],(String)data[2]);SearchPanelBarang.this.prefetchAround(selectedRow);}catch(Exception ex){SearchPanelBarang.this.labelSO.setText("Gagal memuat detail barang");}
             }
         }.execute();
     }
 
-    private void applyField(int row, Barang selectedBarang, String result, String hide) {
-        this.barang = selectedBarang;
-        this.sat1Lbl.setText(this.barang.getSatuan1());
-        if (this.barang.getSatuan2().equals("")) { this.sat2Lbl.setText(""); this.harga2Field.setValue(0); }
-        if (this.barang.getSatuan3().equals("")) { this.sat3Lbl.setText(""); this.harga3Field.setValue(0); }
-        this.sat2Lbl.setText(this.barang.getSatuan2()); this.sat3Lbl.setText(this.barang.getSatuan3());
-        this.harga2Field.setValue(this.barang.getHargaJual2()); this.harga3Field.setValue(this.barang.getHargaJual3());
-        float stokTotal = 0.0f;
-        if (result == null) result = "";
-        String textHide = "Stok disembunyikan sedang SOM";
-        if (hide != null && hide.equals("YES")) { result = "YES"; textHide = "Stok disembunyikan beberapa saat"; }
-        if (!result.equals("")) this.labelSO.setText(textHide); else { this.labelSO.setText(""); stokTotal = this.barang.getStokToko(); }
-        float stok1 = 0.0f, stok2 = 0.0f, stok3 = 0.0f;
-        if (this.barang.getSatuan2().equals("") && this.barang.getSatuan3().equals("")) stok1 = stokTotal;
-        else if (this.barang.getSatuan3().equals("")) { stok2 = (long)stokTotal / (long)this.barang.getKonversi21(); stok1 = this.helper.round(stokTotal % (float)this.barang.getKonversi21(), 2); }
-        else { stok3 = (long)stokTotal / (long)(this.barang.getKonversi21() * this.barang.getKonversi32()); stok2 = (long)(stokTotal % (float)(this.barang.getKonversi21() * this.barang.getKonversi32())) / (long)this.barang.getKonversi21(); stok1 = this.helper.round(stokTotal % (float)(this.barang.getKonversi21() * this.barang.getKonversi32()) % (float)this.barang.getKonversi21(), 2); }
-        this.stok1Field.setText(stok1 + ""); this.stok2Field.setText((long)stok2 + ""); this.stok3Field.setText((long)stok3 + "");
-        this.sat1StokLbl.setText(this.barang.getSatuan1()); this.sat2StokLbl.setText(this.barang.getSatuan2()); this.sat3StokLbl.setText(this.barang.getSatuan3());
-        if (this.barang.getMinPembelian() > 0.0f) { long resultValue = this.helper.roundPrice100((long)(this.barang.getMinPersen() / 100.0f * (float)this.barang.getHargaJual1()) + this.barang.getHargaJual1()); this.harga1Field.setValue(resultValue); this.grosirField.setValue(this.barang.getHargaJual1()); this.minLbl.setText(this.barang.getMinPembelian() + ""); }
-        else { this.harga1Field.setValue(this.barang.getHargaJual1()); this.grosirField.setValue(0); this.minLbl.setText("00.0"); }
+    private void prefetchAround(int row){
+        this.prefetchRow(row-1); this.prefetchRow(row+1);
+    }
+    private void prefetchRow(final int row){
+        if(this.dtm==null||row<0||row>=this.dtm.getRowCount())return;
+        final String productId=this.dtm.getValueAt(row,0).toString();
+        if(this.previewCache.containsKey(productId))return;
+        new SwingWorker<Barang,Void>(){
+            @Override protected Barang doInBackground(){return SearchPanelBarang.this.barangService.getBarangForPreview(productId);}
+            @Override protected void done(){try{Barang b=this.get();if(b!=null)SearchPanelBarang.this.previewCache.put(productId,b);}catch(Exception ignored){}}
+        }.execute();
+    }
+
+    private void applyField(int row,Barang selectedBarang,String result,String hide){
+        this.barang=selectedBarang; this.sat1Lbl.setText(this.barang.getSatuan1());
+        if(this.barang.getSatuan2().equals("")){this.sat2Lbl.setText("");this.harga2Field.setValue(0);} if(this.barang.getSatuan3().equals("")){this.sat3Lbl.setText("");this.harga3Field.setValue(0);}
+        this.sat2Lbl.setText(this.barang.getSatuan2());this.sat3Lbl.setText(this.barang.getSatuan3());this.harga2Field.setValue(this.barang.getHargaJual2());this.harga3Field.setValue(this.barang.getHargaJual3());
+        float stokTotal=0.0f;if(result==null)result="";String textHide="Stok disembunyikan sedang SOM";if(hide!=null&&hide.equals("YES")){result="YES";textHide="Stok disembunyikan beberapa saat";}if(!result.equals(""))this.labelSO.setText(textHide);else{this.labelSO.setText("");stokTotal=this.barang.getStokToko();}
+        float stok1=0.0f,stok2=0.0f,stok3=0.0f;if(this.barang.getSatuan2().equals("")&&this.barang.getSatuan3().equals(""))stok1=stokTotal;else if(this.barang.getSatuan3().equals("")){stok2=(long)stokTotal/(long)this.barang.getKonversi21();stok1=this.helper.round(stokTotal%(float)this.barang.getKonversi21(),2);}else{stok3=(long)stokTotal/(long)(this.barang.getKonversi21()*this.barang.getKonversi32());stok2=(long)(stokTotal%(float)(this.barang.getKonversi21()*this.barang.getKonversi32()))/(long)this.barang.getKonversi21();stok1=this.helper.round(stokTotal%(float)(this.barang.getKonversi21()*this.barang.getKonversi32())%(float)this.barang.getKonversi21(),2);}
+        this.stok1Field.setText(stok1+"");this.stok2Field.setText((long)stok2+"");this.stok3Field.setText((long)stok3+"");this.sat1StokLbl.setText(this.barang.getSatuan1());this.sat2StokLbl.setText(this.barang.getSatuan2());this.sat3StokLbl.setText(this.barang.getSatuan3());
+        if(this.barang.getMinPembelian()>0.0f){long resultValue=this.helper.roundPrice100((long)(this.barang.getMinPersen()/100.0f*(float)this.barang.getHargaJual1())+this.barang.getHargaJual1());this.harga1Field.setValue(resultValue);this.grosirField.setValue(this.barang.getHargaJual1());this.minLbl.setText(this.barang.getMinPembelian()+"");}else{this.harga1Field.setValue(this.barang.getHargaJual1());this.grosirField.setValue(0);this.minLbl.setText("00.0");}
     }
 }
