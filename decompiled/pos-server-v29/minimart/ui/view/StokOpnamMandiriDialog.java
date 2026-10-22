@@ -16,7 +16,6 @@ import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.LayoutStyle;
 import javax.swing.table.DefaultTableModel;
@@ -196,26 +195,6 @@ extends JDialog {
     }
 
     private void saveClick() {
-        if (this.barang == null || this.idSoDetailLbl.getText().equals("-")
-                || !Helper.getInstance().isInteger(this.stokFisikField.getText())) {
-            JOptionPane.showMessageDialog(this, "Pilih barang yang ada di daftar SO dan masukkan stok fisik berupa angka bulat.");
-            return;
-        }
-
-        // Guard against a stale detail ID being reused after selecting a different product.
-        boolean matchingRow = false;
-        for (int row = 0; row < this.soTableModel.getRowCount(); ++row) {
-            if (this.idSoDetailLbl.getText().equals(this.soTableModel.getValueAt(row, 0).toString())
-                    && this.idField.getText().equals(this.soTableModel.getValueAt(row, 1).toString())) {
-                matchingRow = true;
-                break;
-            }
-        }
-        if (!matchingRow) {
-            JOptionPane.showMessageDialog(this, "Barang tidak ditemukan pada daftar SO. Data belum disimpan.");
-            return;
-        }
-
         Object[] rowValue = new Object[]{this.idSoDetailLbl.getText(), this.idField.getText(), this.namaField.getText(), "TOKO", this.jenisField.getText(), this.barang.getRakIdToko(), this.barang.getSatuan2() + ":" + this.barang.getKonversi21() + "/" + this.barang.getSatuan3() + ":" + this.barang.getKonversi32(), this.stokFisikField.getText(), "", this.satuanLbl.getText()};
         this.soParsialDialogListener.saveClick(rowValue);
         this.escapeClick();
@@ -227,11 +206,8 @@ extends JDialog {
     }
 
     private void searchTable(String idBarang) {
-        // Clear the previous selection first so a miss cannot reuse another row's detail ID.
-        this.idSoDetailLbl.setText("-");
         for (int a = 0; a < this.soTableModel.getRowCount(); ++a) {
-            // Column 0 is the SOM detail ID; column 1 is the product ID.
-            String barangId = this.soTableModel.getValueAt(a, 1).toString();
+            String barangId = this.soTableModel.getValueAt(a, 0).toString();
             if (!idBarang.equals(barangId)) continue;
             this.loadDataFromTable(a);
             break;
@@ -245,10 +221,6 @@ extends JDialog {
     protected void loadKodeBarang(String chooseValue) {
         this.setDefault();
         this.barang = this.barangService.getBarang(chooseValue);
-        if (this.barang == null) {
-            JOptionPane.showMessageDialog(this, "Data barang tidak ditemukan. Silakan pilih barang yang valid.");
-            return;
-        }
         this.idField.setText(this.barang.getId());
         this.namaField.setText(this.barang.getNama());
         this.jenisField.setText(this.barang.getJenis());
@@ -258,11 +230,8 @@ extends JDialog {
     }
 
     private void setDefault() {
-        this.barang = null;
         this.idField.setText("");
-        this.idSoDetailLbl.setText("-");
         this.namaField.setText("-");
-        this.jenisField.setText("-");
         this.stokFisikField.setText("0");
         this.satuanLbl.setText("-");
     }

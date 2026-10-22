@@ -11,8 +11,6 @@ public interface BarangDao {
 
     public Barang getBarang(String var1);
 
-    public Barang getBarangById(String var1);
-
     public List<Barang> getBsBarangs(String var1);
 
     public List<Barang> getBarangsMinToko(String var1);

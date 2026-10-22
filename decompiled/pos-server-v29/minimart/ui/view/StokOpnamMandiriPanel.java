@@ -775,54 +775,31 @@ extends JPanel {
         @Override
         public void saveClick(Object[] rowValue) {
             int a;
-            boolean existingDetail = false;
+            boolean newData = true;
             for (a = 0; a < StokOpnamMandiriPanel.this.stokOpnamTM.getRowCount(); ++a) {
                 if (Long.parseLong(StokOpnamMandiriPanel.this.stokOpnamTM.getValueAt(a, 0).toString()) != Long.parseLong(rowValue[0].toString())) continue;
-                existingDetail = true;
+                newData = false;
                 break;
             }
-            if (!existingDetail) {
-                return;
-            }
-
-            String selectedBarangId = rowValue[1].toString();
-            for (int b = 0; b < StokOpnamMandiriPanel.this.stokOpnamTM.getRowCount(); ++b) {
-                if (b != a && selectedBarangId.equals(StokOpnamMandiriPanel.this.stokOpnamTM.getValueAt(b, 1).toString())) {
-                    JOptionPane.showMessageDialog(null, "Barang tersebut sudah ada di daftar SO.");
-                    return;
+            if (!newData) {
+                StokOpnamMandiriPanel.this.stokOpnamTM.removeRow(a);
+                StokOpnamMandiriPanel.this.stokOpnamTM.addRow(rowValue);
+                StokOpnamMandiriDetail somd = StokOpnamMandiriPanel.this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetail(Long.parseLong(rowValue[0].toString()));
+                Barang tempbarang = StokOpnamMandiriPanel.this.barangService.getBarang(somd.getBarangId());
+                if (StokOpnamMandiriPanel.this.state == 1) {
+                    somd.setStokKomp1((int)tempbarang.getStokToko());
+                    somd.setInput1(Integer.parseInt(rowValue[7].toString()));
+                } else if (StokOpnamMandiriPanel.this.state == 2) {
+                    somd.setStokKomp2((int)tempbarang.getStokToko());
+                    somd.setInput2(Integer.parseInt(rowValue[7].toString()));
+                } else if (StokOpnamMandiriPanel.this.state == 3) {
+                    somd.setStokKomp3((int)tempbarang.getStokToko());
+                    somd.setInput3(Integer.parseInt(rowValue[7].toString()));
                 }
+                somd.setHpp(tempbarang.getHpp());
+                somd.setCreated(new Date());
+                StokOpnamMandiriPanel.this.stokOpnamMandiriDetailService.updateStokOpnamMandiriDetail(somd);
             }
-
-            StokOpnamMandiriDetail somd = StokOpnamMandiriPanel.this.stokOpnamMandiriDetailService.getStokOpnamMandiriDetail(Long.parseLong(rowValue[0].toString()));
-            Barang tempbarang = StokOpnamMandiriPanel.this.barangService.getBarangById(selectedBarangId);
-            if (somd == null || tempbarang == null) {
-                JOptionPane.showMessageDialog(null, "Data barang gagal dimuat. Perubahan belum disimpan.");
-                return;
-            }
-
-            // Keep the detail record, displayed product, stock snapshot, and saved product ID aligned.
-            somd.setBarangId(selectedBarangId);
-            if (StokOpnamMandiriPanel.this.state == 1) {
-                somd.setStokKomp1((int)tempbarang.getStokToko());
-                somd.setInput1(Integer.parseInt(rowValue[7].toString()));
-            } else if (StokOpnamMandiriPanel.this.state == 2) {
-                somd.setStokKomp2((int)tempbarang.getStokToko());
-                somd.setInput2(Integer.parseInt(rowValue[7].toString()));
-            } else if (StokOpnamMandiriPanel.this.state == 3) {
-                somd.setStokKomp3((int)tempbarang.getStokToko());
-                somd.setInput3(Integer.parseInt(rowValue[7].toString()));
-            }
-            somd.setHpp(tempbarang.getHpp());
-            somd.setCreated(new Date());
-
-            int updateResult = StokOpnamMandiriPanel.this.stokOpnamMandiriDetailService.updateStokOpnamMandiriDetail(somd);
-            if (updateResult == 0) {
-                JOptionPane.showMessageDialog(null, "Perubahan gagal disimpan. Data tabel tidak diubah.");
-                return;
-            }
-
-            StokOpnamMandiriPanel.this.stokOpnamTM.removeRow(a);
-            StokOpnamMandiriPanel.this.stokOpnamTM.insertRow(a, rowValue);
         }
     }
 

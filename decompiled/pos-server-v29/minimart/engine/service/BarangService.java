@@ -27,10 +27,6 @@ public class BarangService {
         return barang;
     }
 
-    public Barang getBarangById(String id) {
-        return this.barangDao.getBarangById(id);
-    }
-
     public List<Barang> getBsBarangs(String jenis) {
         return this.barangDao.getBsBarangs(jenis);
     }
