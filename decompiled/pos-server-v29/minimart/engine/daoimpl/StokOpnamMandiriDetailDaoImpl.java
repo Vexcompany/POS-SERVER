@@ -338,7 +338,7 @@ implements StokOpnamMandiriDetailDao {
 
     @Override
     public String getStokOpnamMandiriDetailOnProgress(String barangId, int nDays) {
-        String sql = "SELECT m_barang_id FROM stok_opnam_mandiri_detail join stok_opnam_mandiri on (stok_opnam_mandiri_detail.stok_opnam_mandiri_id = stok_opnam_mandiri.id) WHERE m_barang_id = ? and tanggal_submit is null AND CURDATE() >= DATE_SUB(stok_opnam_mandiri.tanggal, INTERVAL ? DAY)";
+        String sql = "SELECT m_barang_id FROM stok_opnam_mandiri_detail join stok_opnam_mandiri on (stok_opnam_mandiri_detail.stok_opnam_mandiri_id = stok_opnam_mandiri.id) WHERE m_barang_id = ? and tanggal_submit is null AND CURDATE() >= DATE_SUB(stok_opnam_mandiri.tanggal, INTERVAL ? DAY) LIMIT 1";
         String result = "";
         try {
             result = (String)this.getSimpleJdbcTemplate().queryForObject(sql, String.class, new Object[]{barangId, nDays});
