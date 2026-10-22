@@ -10,6 +10,7 @@ Two candidate fixes are already available as separate draft PRs:
 
 - [Draft PR #1 — Stock Opname product identity](https://github.com/Vexcompany/POS-SERVER/pull/1)
 - [Draft PR #2 — Responsive product-search preview](https://github.com/Vexcompany/POS-SERVER/pull/2)
+- [Draft PR #4 — SOM progress lookup with multiple matches](https://github.com/Vexcompany/POS-SERVER/pull/4)
 
 Both remain **draft / not merged**. The audit found additional risks that should be addressed or explicitly tested before production deployment.
 
@@ -37,7 +38,7 @@ Several DAO/service methods catch database exceptions and return `0` or `null`. 
 
 The existing edit path searched the SOM table using column 0 even though column 0 is the SOM detail ID and column 1 is the product ID. The save handler also loaded stock/HPP using the detail's existing product ID instead of the newly selected product ID, and did not update the detail's product ID. This is a concrete candidate for the reported A4/F4 stale-product symptom.
 
-Candidate correction is in [Draft PR #1](https://github.com/Vexcompany/POS-SERVER/pull/1). It still needs build and safe database verification.
+Candidate correction is in [Draft PR #1](https://github.com/Vexcompany/POS-SERVER/pull/1). A second static review also replaced the ambiguous `getBarang(String)` lookup with a direct `m_barang.ID = ?` lookup for this edit path, since the generic method matches either barcode or product ID. It still needs build and safe database verification.
 
 ### P1 — Product search preview blocks the Swing UI thread
 
@@ -61,7 +62,7 @@ The method accepts `rak` and normalizes it, but the SQL filters by product type 
 
 The query can return multiple rows for the same product when it appears in more than one unsubmitted Stock Opname. The method uses `queryForObject()`, catches the resulting data-access exception, and returns an empty string.
 
-**Risk:** Multiple matching records can be treated like no active Stock Opname, potentially causing the UI to show stock when it should be hidden or fail to flag a product as in progress. Confirm intended behavior, then use an explicit existence/limited query or return a collection/boolean.
+**Risk:** Multiple matching records can be treated like no active Stock Opname, potentially causing the UI to show stock when it should be hidden or fail to flag a product as in progress. [Draft PR #4](https://github.com/Vexcompany/POS-SERVER/pull/4) adds `LIMIT 1` because the caller only needs to know whether any qualifying row exists. This is a candidate static fix; validate the multiple-active-SOM business rule in a disposable database before merge.
 
 ### P2 — Batch-update DAO method is an explicit runtime failure
 
@@ -118,5 +119,7 @@ Final submission assigns the new stock-opname ID using `getLastId() + 1`. The DA
 
 - Draft PR #1: candidate Stock Opname identity fix; static inspection only.
 - Draft PR #2: candidate product-search responsiveness fix; static inspection only.
+- Draft PR #3: consolidated audit findings and validation plan.
+- Draft PR #4: candidate fix for multiple active SOM rows; static SQL review only.
 - This report documents further findings; it does not apply any production changes.
 - No PR has been merged and no operational POS database has been modified by this audit.
