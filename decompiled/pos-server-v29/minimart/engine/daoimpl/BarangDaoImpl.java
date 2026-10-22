@@ -62,6 +62,19 @@ implements BarangDao {
     }
 
     @Override
+    public Barang getBarangById(String id) {
+        String sql = "SELECT * FROM m_barang WHERE ID = ? LIMIT 1";
+        Barang barang = null;
+        try {
+            barang = (Barang)this.getSimpleJdbcTemplate().queryForObject(sql, (ParameterizedRowMapper)new BarangRowMapper(), new Object[]{id});
+        }
+        catch (DataAccessException e) {
+            System.out.println("Message: " + e.getMessage());
+        }
+        return barang;
+    }
+
+    @Override
     public Barang getBarangForPreview(String id) {
         String sql = "SELECT * FROM m_barang WHERE ID = ? LIMIT 1";
         Barang barang = null;
