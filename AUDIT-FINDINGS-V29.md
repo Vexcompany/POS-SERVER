@@ -104,6 +104,16 @@ Final submission assigns the new stock-opname ID using `getLastId() + 1`. The DA
 
 **Recommendation:** Use a database-generated auto-increment/sequence key where schema compatibility allows, or allocate IDs through a transaction-safe mechanism with a uniqueness constraint and explicit retry/error handling. Never interpret failure to read the last ID as an empty table.
 
+### P2 — Stock Opname product list performs one extra package-stock query per product
+
+**File:** `decompiled/pos-server-v29/minimart/ui/view/StokOpnamPanelNew.java`, methods that load rows for a new Stock Opname; service/DAO: `PaketService.getStokBarangByDetailPaket(...)` and `PaketDaoImpl.getStokBarangByDetailPaket(...)`.
+
+When loading each product row for the Toko location, the UI calls `getStokBarangByDetailPaket(barang.getId())`. That method executes a separate aggregate query over `m_paket`, `m_paket_detail`, and `m_barang`. The same pattern appears in two row-loading paths.
+
+**Risk:** Loading a large Stock Opname list can execute hundreds of additional database round trips, adding latency and increasing database load.
+
+**Recommendation:** Replace the per-row query with one aggregate query for all product IDs (grouped by component product ID), build an in-memory map, and populate the rows from that map. Keep the current calculation semantics and compare old/new results for package products in a test database before replacing it.
+
 ## Validation plan before release
 
 1. Recover the original source project or document a reproducible, verified build path for the exact deployed V29 runtime.
