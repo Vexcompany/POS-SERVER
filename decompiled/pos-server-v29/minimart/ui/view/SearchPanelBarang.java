@@ -255,7 +255,7 @@ extends JDialog {
         new SwingWorker<Object[], Void>() {
             @Override
             protected Object[] doInBackground() {
-                Barang selectedBarang = SearchPanelBarang.this.barangService.getBarang(productId);
+                Barang selectedBarang = SearchPanelBarang.this.barangService.getBarangForPreview(productId);
                 if (selectedBarang == null) {
                     return new Object[]{null, "", ""};
                 }
