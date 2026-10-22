@@ -260,7 +260,9 @@ extends JDialog {
     private void setDefault() {
         this.barang = null;
         this.idField.setText("");
+        this.idSoDetailLbl.setText("-");
         this.namaField.setText("-");
+        this.jenisField.setText("-");
         this.stokFisikField.setText("0");
         this.satuanLbl.setText("-");
     }
