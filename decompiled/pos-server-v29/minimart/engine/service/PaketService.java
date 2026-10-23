@@ -74,6 +74,9 @@ public class PaketService {
     }
 
     public int syncPaketOnlineToOffline() {
+        if (Boolean.getBoolean("pos.local")) {
+            return 1;
+        }
         int result = 1;
         try {
             System.out.println("Getting Paket Online");
@@ -113,6 +116,9 @@ public class PaketService {
     }
 
     public void doSyncPaketOnlineToOffline() {
+        if (Boolean.getBoolean("pos.local")) {
+            return;
+        }
         int result = this.syncPaketOnlineToOffline();
         if (result == 1) {
             JOptionPane.showMessageDialog(null, "Data Paket Berhasil di Sinkronisasi");
