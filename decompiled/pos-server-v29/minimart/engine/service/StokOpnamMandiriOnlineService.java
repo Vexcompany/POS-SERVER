@@ -29,6 +29,9 @@ public class StokOpnamMandiriOnlineService {
     }
 
     public int downloadSOM() {
+        if (Boolean.getBoolean("pos.local")) {
+            return 1;
+        }
         try {
             System.out.println("Upload SOM Past Week");
             this.uploadBatchJSONPassWeek();
