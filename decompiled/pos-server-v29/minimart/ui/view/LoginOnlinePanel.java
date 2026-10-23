@@ -255,6 +255,24 @@ extends JPanel {
                 this.loginProcess = false;
             } else {
                 this.loginProcess = false;
+                String detail = "Login online gagal. Periksa koneksi internet dan layanan autentikasi.";
+                if (res != null) {
+                    String status = res.getStatus();
+                    String message = res.getMessage();
+                    String code = res.getCode();
+                    StringBuilder detailBuilder = new StringBuilder("Login online gagal.");
+                    if (status != null && !status.trim().isEmpty()) {
+                        detailBuilder.append("\\nStatus: ").append(status);
+                    }
+                    if (code != null && !code.trim().isEmpty()) {
+                        detailBuilder.append("\\nKode: ").append(code);
+                    }
+                    if (message != null && !message.trim().isEmpty()) {
+                        detailBuilder.append("\\nPesan: ").append(message);
+                    }
+                    detail = detailBuilder.toString();
+                }
+                JOptionPane.showMessageDialog(this, detail, "Login Gagal", JOptionPane.ERROR_MESSAGE);
                 this.listener.onLoginFailed();
             }
         }
