@@ -16,7 +16,7 @@ SELECT 'Barcode lookup with product join' AS test_name;
 EXPLAIN ANALYZE SELECT *
 FROM m_barang
 LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID
-WHERE BARCODE = '89990000000050000'
+WHERE BARCODE = '8999000000050000'
    OR m_barang.ID = 'B050000'
 ORDER BY BARCODE ASC
 LIMIT 1;
