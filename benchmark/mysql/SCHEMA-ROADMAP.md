@@ -15,6 +15,8 @@ The same source confirms the production lookup shape:
 
 The barcode row mapper confirms `m_barcode` columns: `ID`, `M_BARANG_ID`, `SATUAN`, `BARCODE`, `CREATED`, `UPDATED`.
 
+The LOCAL login path is also now verified from `KaryawanService`: it defaults to MySQL `127.0.0.1:3306`, database `minimarket`, user `root`, empty password, and branch code/name `LOCAL`. These values are overridable with `pos.local.db.*` system properties. `ConnectionManager` constructs the JDBC URL from those credentials.
+
 ## Benchmark-only assumptions
 
 `benchmark/mysql/00_synthetic_core_benchmark.sql` intentionally creates only a small subset of the database: `m_cabang`, `m_jenis`, `m_karyawan`, `m_role`, `m_barang`, and `m_barcode`. It must not be treated as a complete v29 schema.
@@ -24,6 +26,17 @@ The synthetic dataset currently generates 100,000 products and 3 barcodes per pr
 ## Important correction
 
 The original `01_query_profile.sql` contains a barcode literal that does not match the generator formula in `00_synthetic_core_benchmark.sql`. For `B050000`, the generated PCS barcode is `8999000000050000`. A corrected companion profile is provided as `02_corrected_query_profile.sql`.
+
+## LOCAL test boundary
+
+Keep the databases separate:
+
+```text
+minimarket              <- LOCAL POS-SERVER v29 runtime database
+minimarket_benchmark    <- disposable performance benchmark
+```
+
+The repository does not currently contain a confirmed complete operational v29 SQL dump. Therefore the benchmark must not be copied into `minimarket` as a substitute for the real schema. `benchmark/mysql/LOCAL-TEST-SETUP.md` documents the verified LOCAL connection defaults and the safe way to start the packaged JAR once the required operational schema is available.
 
 ## Next implementation target
 
