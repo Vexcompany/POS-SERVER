@@ -59,6 +59,27 @@ The second and third commands are read-only, but the first one drops/recreates t
 
 The synthetic dataset targets query-path measurements only. It does not validate login, sales finalization, stock commit, purchasing, synchronization or the complete GUI startup sequence.
 
+## Initial synthetic CI performance baseline (2026-10-29)
+
+The GitHub Actions smoke test ran the seed, sanity checks and query profiles successfully against an isolated MySQL 8.4.13 service. Fixture checks passed: 100,000 products, 300,000 barcodes, 1,000 prefix matches, the expected B050000/PCS barcode, and exactly three barcodes per product.
+
+Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
+
+| Query shape | Actual time | Plan observation |
+|---|---:|---|
+| Exact product ID | 0.0043 ms | Constant/primary-key result |
+| Product name prefix, 50 rows | 0.0697 ms | Range scan on idx_barang_nama |
+| Product name contains, 100 rows | 8.68 ms | Leading wildcard; scans about 10,100 index entries |
+| Exact barcode | 0.0159 ms | Lookup via idx_barcode_lookup |
+| Barcode + product join | 0.0203 ms | Barcode index, then product primary key |
+| Existing DAO OR query, product-ID input | 766 ms | Scans 100,000 products, visits 300,000 joined barcode rows, then sorts |
+| Existing DAO OR query, barcode input | 761 ms | Same full join/scan pattern |
+| Split-path product-ID candidate | 0.0299 ms | Product primary key then three barcode rows |
+| Split-path barcode candidate | 0.0181 ms | Barcode index then product primary key |
+| Rack prefix, 400 rows | 1.55 ms | Range scan on idx_barang_rak_toko |
+
+The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch: validate result precedence and edge cases, then build/test a separate DAO change before deploying it. CI timings are environment/cache dependent and are not a VPS performance guarantee.
+
 ## Next step to complete a real LOCAL test database
 
 Obtain a schema-only SQL dump/export from the original v29 database (or a vendor-provided migration/DDL package), with secrets and production rows excluded. Compare it against SOURCE-SCHEMA-INVENTORY.md, then import it into an isolated disposable schema and add only synthetic fixture rows. Until that source DDL exists, a full LOCAL schema must not be invented from DAO snippets alone.
