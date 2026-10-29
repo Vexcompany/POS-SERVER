@@ -15,15 +15,16 @@ SELECT 'm_barcode row count',
 FROM m_barcode;
 
 SELECT 'known product and generated PCS barcode' AS check_name,
-       b.ID,
+       expected.ID AS expected_id,
+       b.ID AS actual_id,
        b.NAMA,
        bc.BARCODE,
        IF(b.NAMA = 'Produk Uji 050000'
           AND bc.BARCODE = '8999000000050000', 'PASS', 'FAIL') AS status
-FROM m_barang AS b
-JOIN m_barcode AS bc ON bc.M_BARANG_ID = b.ID
-WHERE b.ID = 'B050000'
-  AND bc.SATUAN = 'PCS';
+FROM (SELECT 'B050000' AS ID) AS expected
+LEFT JOIN m_barang AS b ON b.ID = expected.ID
+LEFT JOIN m_barcode AS bc
+  ON bc.M_BARANG_ID = expected.ID AND bc.SATUAN = 'PCS';
 
 SELECT 'name prefix result count' AS check_name,
        COUNT(*) AS actual_value,
