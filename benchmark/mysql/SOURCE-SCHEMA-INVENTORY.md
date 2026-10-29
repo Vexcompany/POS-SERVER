@@ -11,12 +11,14 @@ This inventory was compiled from the decompiled source under decompiled/pos-serv
 | m_cabang | daoimpl/CabangDaoImpl.java, rowmapper/CabangRowMapper.java | ID, NAMA, ALAMAT, TIPE_TOKO, TIPE_CABANG |
 | m_karyawan | daoimpl/KaryawanDaoImpl.java, rowmapper/KaryawanRowMapper.java, model/Karyawan.java | ID, NAMA, PASSWORD, GAJI, ROLE, AVAILABLE, CREATED, UPDATED; DAO queries by ID/password with AVAILABLE = 1. This is not the LOCAL authentication shortcut. |
 | m_role | daoimpl/RoleDaoImpl.java, rowmapper/RoleRowMapper.java, model/Role.java | ID, ROLE, MENU, ACCESS, UPDATED, UPDATED_BY; access lookup/update by ROLE + MENU |
+| m_constants | daoimpl/KonstantaDaoImpl.java, rowmapper/KonstantaRowMapper.java | CONSTANT, VALUE; runtime configuration key/value store |
 | m_kasir | daoimpl/KasirDaoImpl.java, rowmapper/KasirRowMapper.java | ID, CREATED, UPDATED |
 | m_jenis | daoimpl/JenisDaoImpl.java, rowmapper/JenisRowMapper.java | JENIS, POIN_SALES, CREATED, UPDATED, MARGIN_CABANG, MARGIN_TEMPO |
 | m_barang | daoimpl/BarangDaoImpl.java, rowmapper/BarangRowMapper.java, model/Barang.java | ID, M_JENIS_JENIS, RAK_GUDANG, RAK_TOKO, NAMA, SATUAN_1, SATUAN_2, SATUAN_3, KONVERSI_21, KONVERSI_32, BATAS_ATAS_STOCK, REORDER_POINT, HARGA_JUAL_1, HARGA_JUAL_2, HARGA_JUAL_3, MIN_PEMBELIAN, MIN_PERSEN, STOK_TOKO, STOK_GUDANG, STOK_BS, UPDATE_HARGA, HPP, HPP_UPDATED, CREATED, UPDATED, STOK_PUSAT, PARENT_ID, TAG, EXPDAY |
 | m_barcode | daoimpl/BarcodeDaoImpl.java, rowmapper/BarcodeRowMapper.java, model/Barcode.java | ID, M_BARANG_ID, SATUAN, BARCODE, CREATED, UPDATED; exact barcode lookup and product/unit lookup |
 | m_paket | daoimpl/PaketDaoImpl.java, rowmapper/PaketRowMapper.java | ID, M_BARANG_ID, CREATED, UPDATED, STATUS; joins m_barang |
 | m_paket_detail | daoimpl/PaketDetailDaoImpl.java, rowmapper/PaketDetailRowMapper.java | ID, M_PAKET_ID, M_BARANG_ID, JUMLAH_BARANG |
+| m_parent_barang | daoimpl/ParentBarangDaoImpl.java, rowmapper/ParentBarangRowMapper.java | ID, NAMA; product parent lookup/search |
 
 ### Source-derived query shapes
 
@@ -36,6 +38,7 @@ This inventory was compiled from the decompiled source under decompiled/pos-serv
 | m_customer | rowmapper/CustomerRowMapper.java, daoimpl/CustomerDaoImpl.java, sales DAOs | ID, KTP, NAMA, ALAMAT, KOTA, TANGGAL_LAHIR, TELEPON, HUTANG, POINT, AVAILABLE, CREATED, UPDATED, LIMIT_KREDIT, TOP, TIPE, KETERANGAN, TAG, NAMA_PERUSAHAAN, createdByCabang, nomor_rekening, bank, idCabang |
 | m_sales | rowmapper/SalesRowMapper.java and sales DAOs | ID, ALAMAT, KTP, NAMA, TELEPON, TARGET; referenced by sales headers |
 | m_voucher | rowmapper/VoucherRowMapper.java and sales DAOs | ID, M_CUSTOMER_ID, JUMLAH, AVAILABLE, EXPIRED_DATE, EXCHANGE_DATE; referenced by sales headers |
+| o_invoice_reprint_log | daoimpl/InvoiceLogDaoImpl.java | ID, T_PENJUALAN_ID, M_KARYAWAN_ID, CREATED; invoice reprint audit log |
 
 ## Stock, purchasing and package dependencies
 
