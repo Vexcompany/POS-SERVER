@@ -3,9 +3,9 @@
 -- It is destructive to existing benchmark data. Never point it at minimarket or production.
 -- MySQL 8.0+ required for the recursive CTE; EXPLAIN ANALYZE requires 8.0.18+.
 --
--- This is not a complete operational schema. Types below are aligned where source
--- evidence exists (notably Java RowMapper conversions); constraints/indexes that
--- cannot be proven from the decompiled source are deliberately not imposed.
+-- This is not a complete operational schema. Column names/JDBC type hints are aligned
+-- where source evidence exists. Indexes below are benchmark candidates for observed query
+-- shapes, not claims about production indexes. Unproven uniqueness/FK constraints are omitted.
 
 CREATE DATABASE IF NOT EXISTS minimarket_benchmark
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -24,8 +24,7 @@ CREATE TABLE m_cabang (
   NAMA VARCHAR(120) NOT NULL,
   ALAMAT VARCHAR(255) NULL,
   TIPE_TOKO VARCHAR(80) NULL,
-  TIPE_CABANG VARCHAR(80) NULL,
-  KEY idx_cabang_nama (NAMA)
+  TIPE_CABANG VARCHAR(80) NULL
 ) ENGINE=InnoDB;
 
 -- JenisRowMapper reads CREATED/UPDATED as java.sql.Date.
@@ -48,7 +47,6 @@ CREATE TABLE m_karyawan (
   available TINYINT NOT NULL DEFAULT 1,
   created DATETIME NULL,
   updated DATETIME NULL,
-  KEY idx_karyawan_nama_available (nama, available),
   KEY idx_karyawan_password_available (password, available)
 ) ENGINE=InnoDB;
 
