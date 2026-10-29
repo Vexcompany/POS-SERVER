@@ -45,4 +45,57 @@ FROM (
     HAVING COUNT(bc.ID) <> 3
 ) AS mismatches;
 
+-- Check candidate result parity for the two normal input formats before considering
+-- any DAO rewrite. These checks compare the current OR query with its split lookup path.
+WITH old_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B050000' OR b.ID = 'B050000'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+split_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B050000'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+)
+SELECT 'product ID input old-vs-split parity' AS check_name,
+       old_result.product_id AS old_product_id,
+       split_result.product_id AS split_product_id,
+       old_result.barcode AS old_barcode,
+       split_result.barcode AS split_barcode,
+       IF(old_result.product_id <=> split_result.product_id
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
+FROM old_result CROSS JOIN split_result;
+
+WITH old_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '8999000000050000'
+       OR b.ID = '8999000000050000'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+split_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '8999000000050000'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+)
+SELECT 'barcode input old-vs-split parity' AS check_name,
+       old_result.product_id AS old_product_id,
+       split_result.product_id AS split_product_id,
+       old_result.barcode AS old_barcode,
+       split_result.barcode AS split_barcode,
+       IF(old_result.product_id <=> split_result.product_id
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
+FROM old_result CROSS JOIN split_result;
+
 -- This script is read-only and intentionally does not inspect or modify minimarket.
