@@ -61,7 +61,7 @@ The online schema minimarket_online is a separate dependency used by online conn
 
 The synthetic benchmark is intentionally limited to m_cabang, m_jenis, m_karyawan, m_role, m_barang, and m_barcode.
 
-- Date columns that relevant RowMappers read with ResultSet.getDate(...) are seeded as DATETIME values rather than numeric UNIX timestamps. m_barang.HPP_UPDATED remains numeric because BarangDaoImpl explicitly writes UNIX_TIMESTAMP() to it.
+- Date-like columns read with ResultSet.getDate(...) are seeded as DATETIME/NOW() in this disposable fixture. That choice follows Java access patterns but does not establish the original physical SQL type; confirm it against the schema export. m_barang.HPP_UPDATED remains numeric because BarangDaoImpl explicitly writes UNIX_TIMESTAMP() to it.
 - m_barcode.ID is INT in line with BarcodeRowMapper.getInt("ID").
 - Barcode uniqueness and a foreign key are not imposed because they are not established by DAO source evidence.
 - m_role(role, menu) is indexed but not declared unique because uniqueness is not established by DAO source evidence.
