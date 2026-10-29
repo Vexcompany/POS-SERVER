@@ -3,9 +3,11 @@
 -- It is destructive to existing benchmark data. Never point it at minimarket or production.
 -- MySQL 8.0+ required for the recursive CTE; EXPLAIN ANALYZE requires 8.0.18+.
 --
--- This is not a complete operational schema. Column names/JDBC type hints are aligned
--- where source evidence exists. Indexes below are benchmark candidates for observed query
--- shapes, not claims about production indexes. Unproven uniqueness/FK constraints are omitted.
+-- This is not a complete operational schema. Column names and JDBC access patterns are
+-- source-backed, but physical production SQL types are not available from RowMappers alone.
+-- DATETIME/BIGINT/INT choices below are for this disposable fixture and must be checked
+-- against an original DDL before runtime use. Indexes are benchmark candidates, not claims
+-- about production indexes. Unproven uniqueness/FK constraints are omitted.
 
 CREATE DATABASE IF NOT EXISTS minimarket_benchmark
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -27,7 +29,8 @@ CREATE TABLE m_cabang (
   TIPE_CABANG VARCHAR(80) NULL
 ) ENGINE=InnoDB;
 
--- JenisRowMapper reads CREATED/UPDATED as java.sql.Date.
+-- JenisRowMapper reads CREATED/UPDATED as java.sql.Date. This fixture uses DATETIME;
+-- the original physical SQL type is not established by the RowMapper.
 CREATE TABLE m_jenis (
   JENIS VARCHAR(120) NOT NULL PRIMARY KEY,
   POIN_SALES INT NOT NULL DEFAULT 0,
@@ -37,7 +40,8 @@ CREATE TABLE m_jenis (
   MARGIN_TEMPO DECIMAL(8,2) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB;
 
--- KaryawanRowMapper reads CREATED/UPDATED as dates and GAJI as a long.
+-- KaryawanRowMapper reads CREATED/UPDATED as dates and GAJI as a long. DATETIME/BIGINT
+-- are fixture choices; verify physical SQL types against the original DDL.
 CREATE TABLE m_karyawan (
   id VARCHAR(40) NOT NULL PRIMARY KEY,
   nama VARCHAR(160) NOT NULL,
@@ -50,8 +54,8 @@ CREATE TABLE m_karyawan (
   KEY idx_karyawan_password_available (password, available)
 ) ENGINE=InnoDB;
 
--- RoleRowMapper reads UPDATED as a date. Role/menu uniqueness is not asserted
--- by the DAO source, so use a normal lookup index rather than a UNIQUE constraint.
+-- RoleRowMapper reads UPDATED as a date; DATETIME is a fixture choice, not a verified
+-- production type. Role/menu uniqueness is not asserted, so use a normal lookup index.
 CREATE TABLE m_role (
   id VARCHAR(80) NOT NULL PRIMARY KEY,
   role VARCHAR(80) NOT NULL,
@@ -63,8 +67,8 @@ CREATE TABLE m_role (
 ) ENGINE=InnoDB;
 
 -- Columns are taken from BarangDaoImpl and BarangRowMapper.
--- HPP_UPDATED is numeric (BarangDaoImpl writes UNIX_TIMESTAMP()); CREATED/UPDATED
--- are bound from java.util.Date and read via rs.getDate(), so use DATETIME here.
+-- HPP_UPDATED is numeric (BarangDaoImpl writes UNIX_TIMESTAMP()). CREATED/UPDATED are
+-- date-like in the Java path; DATETIME is a fixture choice, not verified production DDL.
 CREATE TABLE m_barang (
   ID VARCHAR(40) NOT NULL PRIMARY KEY,
   M_JENIS_JENIS VARCHAR(120) NOT NULL DEFAULT '',
@@ -103,8 +107,8 @@ CREATE TABLE m_barang (
   KEY idx_barang_update_harga (UPDATE_HARGA)
 ) ENGINE=InnoDB;
 
--- BarcodeRowMapper reads ID as int. Barcode uniqueness and a physical FK are not
--- asserted by the DAO source, so avoid adding those extra benchmark constraints.
+-- BarcodeRowMapper reads ID as int. INT and DATETIME are fixture choices. Barcode
+-- uniqueness and a physical FK are not asserted by the DAO source, so omit those constraints.
 CREATE TABLE m_barcode (
   ID INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
   M_BARANG_ID VARCHAR(40) NOT NULL,
