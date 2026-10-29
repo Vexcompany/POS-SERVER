@@ -26,6 +26,7 @@ Creating an empty database called minimarket does not create the operational sch
 - Removed the unexplained idx_barang_barcode_search index because it was not aligned with actual barcode lookup SQL.
 - Query profiling now separates barcode lookup from product-ID lookup. The prior OR predicate could let the optimizer choose the primary-key branch and conceal barcode-index behavior.
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
+- Added 03_benchmark_sanity_checks.sql to check the exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
 
 These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed.
 
@@ -44,6 +45,15 @@ These are synthetic benchmark choices informed by source evidence, not a claim t
 ## Safe execution
 
 The seed script drops and recreates the six tables in minimarket_benchmark. Run it only when that database is disposable and its contents may be discarded. Query profiles require MySQL 8.0.18+ for EXPLAIN ANALYZE; on older MySQL versions use EXPLAIN without ANALYZE and do not compare estimates as actual timings.
+
+Recommended benchmark-only sequence:
+
+    cd ~/POS-SERVER
+    sudo mysql < benchmark/mysql/00_synthetic_core_benchmark.sql
+    sudo mysql < benchmark/mysql/03_benchmark_sanity_checks.sql
+    sudo mysql < benchmark/mysql/01_query_profile.sql
+
+The second and third commands are read-only, but the first one drops/recreates tables in minimarket_benchmark. Review the file and confirm the target schema before running it. Do not run the seed against minimarket or a production database.
 
 The synthetic dataset targets query-path measurements only. It does not validate login, sales finalization, stock commit, purchasing, synchronization or the complete GUI startup sequence.
 
