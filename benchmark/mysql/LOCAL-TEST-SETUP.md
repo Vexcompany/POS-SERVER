@@ -1,91 +1,63 @@
 # POS-SERVER v29 LOCAL database test setup
 
-This document separates the **LOCAL runtime database** from the disposable performance benchmark.
+This document separates the LOCAL runtime database from the disposable performance benchmark.
 
 ## Verified v29 runtime defaults
 
-`KaryawanService.authLoginOnline()` creates a LOCAL `DbCredential` with these defaults:
+KaryawanService creates a LOCAL DbCredential with these defaults:
 
-- host: `127.0.0.1`
-- port: `3306`
-- database: `minimarket`
-- username: `root`
+- host: 127.0.0.1
+- port: 3306
+- database: minimarket
+- username: root
 - password: empty string
-- branch name/code: `LOCAL`
+- branch name/code: LOCAL
 
 The values can be overridden with Java system properties:
 
-```text
--Dpos.local.db.host=127.0.0.1
--Dpos.local.db.port=3306
--Dpos.local.db.name=minimarket
--Dpos.local.db.user=root
--Dpos.local.db.password=...
-```
+    -Dpos.local.db.host=127.0.0.1
+    -Dpos.local.db.port=3306
+    -Dpos.local.db.name=minimarket
+    -Dpos.local.db.user=root
+    -Dpos.local.db.password=...
 
-`ConnectionManager.configure()` builds the MySQL URL as `jdbc:mysql://<host>:<port>/<database>` using those credentials.
+ConnectionManager.configure() builds the MySQL URL as jdbc:mysql://<host>:<port>/<database> using those credentials.
 
-## Important database separation
+## Database separation
 
-Do **not** point the POS application at `minimarket_benchmark` just because that database contains 100,000 synthetic products. The benchmark intentionally contains only a small subset of the v29 schema.
+    minimarket              <- LOCAL application database
+    minimarket_benchmark    <- disposable query-performance benchmark
 
-Use this layout:
+The benchmark contains only six tables: m_cabang, m_jenis, m_karyawan, m_role, m_barang, and m_barcode. It is designed for query profiling with 100,000 synthetic products and 300,000 barcodes, not for a complete POS workflow.
 
-```text
-minimarket              <- LOCAL application database
-minimarket_benchmark    <- disposable query-performance benchmark
-```
+## Safe VPS checks
 
-The benchmark is currently limited to `m_cabang`, `m_jenis`, `m_karyawan`, `m_role`, `m_barang`, and `m_barcode`, with 100,000 synthetic products and 300,000 barcodes. It is not sufficient for a full POS workflow.
+These commands are read-only:
 
-## Safe VPS preparation
+    sudo mysql -e "SHOW DATABASES LIKE 'minimarket';"
+    sudo mysql minimarket -e "SHOW TABLES;"
+    sudo mysql minimarket_benchmark -e "SHOW TABLES;"
 
-Check the LOCAL database without modifying it:
+If minimarket is empty, do not import 00_synthetic_core_benchmark.sql into it. That script drops/recreates benchmark tables only inside minimarket_benchmark, and it cannot supply the full operational schema.
 
-```bash
-sudo mysql -e "SHOW DATABASES LIKE 'minimarket';"
-sudo mysql minimarket -e "SHOW TABLES;"
-```
+## Run the packaged application (only after the real schema is present)
 
-If `minimarket` is empty, **do not import the benchmark SQL into it**. A complete operational v29 dump is not present in this repository yet.
+The extracted package path is:
 
-## Running the packaged POS v29
+    extracted/pos-server-v29/POS server v29/minimarket.jar
 
-The extracted package contains:
+The package README specifies java -jar "minimarket.jar". For explicit LOCAL settings, run from the package directory:
 
-```text
-extracted/pos-server-v29/POS server v29/minimarket.jar
-```
+    cd ~/POS-SERVER/extracted/pos-server-v29/"POS server v29"
+    java -Dpos.local.db.host=127.0.0.1 \
+         -Dpos.local.db.port=3306 \
+         -Dpos.local.db.name=minimarket \
+         -Dpos.local.db.user=root \
+         -Dpos.local.db.password='' \
+         -jar minimarket.jar
 
-The package README specifies:
+This starts the packaged desktop application; it does not create or migrate the database. A complete operational v29 schema is still required for successful LOCAL login and full POS workflow. No claim is made that this command has been run on the VPS.
 
-```bash
-java -jar "minimarket.jar"
-```
+## Schema evidence
 
-For a LOCAL test with explicit database settings, run from the package directory:
-
-```bash
-cd ~/POS-SERVER/extracted/pos-server-v29/"POS server v29"
-java -Dpos.local.db.host=127.0.0.1 \
-     -Dpos.local.db.port=3306 \
-     -Dpos.local.db.name=minimarket \
-     -Dpos.local.db.user=root \
-     -Dpos.local.db.password='' \
-     -jar minimarket.jar
-```
-
-The application still requires the **real v29 operational schema** in `minimarket` before a complete login/POS workflow can be expected to work.
-
-## Next schema-extraction priority
-
-Use the decompiled v29 source as evidence and continue extracting dependencies in this order:
-
-1. LOCAL login and employee/role tables.
-2. Product, barcode, category, rack, package and pricing tables.
-3. Sales header/detail, temporary sales, payment/shift tables.
-4. Stock and stock-opname tables.
-5. Customer/member and returns tables.
-6. Synchronization/outbox tables used by LOCAL/online sync.
-
-Only add a table/column to a synthetic schema when a DAO, service, model, or row mapper provides source evidence. Never treat the six-table benchmark as a complete production schema.
+See SOURCE-SCHEMA-INVENTORY.md for the DAO/model/RowMapper table map and SCHEMA-ROADMAP.md for known gaps. The repository does not currently contain a confirmed complete operational v29 SQL dump.
