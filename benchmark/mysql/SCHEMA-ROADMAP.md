@@ -80,6 +80,13 @@ Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
 
 The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch. The read-only fixture script now checks result parity for normal product-ID and barcode inputs; unusual overlapping ID/barcode values, null behavior and full application integration still need review before a separate DAO change can be built/tested. CI timings are environment/cache dependent and are not a VPS performance guarantee.
 
+## Continuation checkpoint (2026-10-29)
+
+- Repo-side benchmark corrections and source inventory were merged via [PR #9](https://github.com/Vexcompany/POS-SERVER/pull/9).
+- The parity-checked MySQL 8.4.13 run passed all fixture checks and uploaded the profile artifact in [GitHub Actions run 40808093371](https://github.com/Vexcompany/POS-SERVER/actions/runs/40808093371). The artifact is retained for seven days from the run.
+- Do not repeat the seed/profile cycle without a code or environment change; the current fixture contract and baseline are recorded above.
+- The next useful step is either to obtain the original schema-only DDL for the LOCAL database, or to make a separate, build-validated DAO optimization from the measured OR-query bottleneck. Do not invent a full schema or change production DAO behavior from the synthetic result alone.
+
 ## Next step to complete a real LOCAL test database
 
 Obtain a schema-only SQL dump/export from the original v29 database (or a vendor-provided migration/DDL package), with secrets and production rows excluded. Compare it against SOURCE-SCHEMA-INVENTORY.md, then import it into an isolated disposable schema and add only synthetic fixture rows. Until that source DDL exists, a full LOCAL schema must not be invented from DAO snippets alone.
