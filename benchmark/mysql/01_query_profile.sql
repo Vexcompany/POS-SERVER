@@ -27,6 +27,14 @@ EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_ba
 SELECT 'DAO combined lookup with barcode input' AS test_name;
 EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = '8999000000050000' OR m_barang.ID = '8999000000050000' ORDER BY BARCODE ASC LIMIT 1;
 
+-- Candidate comparison only: split the mutually exclusive ID/barcode search paths.
+-- This is not a production DAO change; validate result parity before adopting it.
+SELECT 'Split-path candidate with product ID input' AS test_name;
+EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE m_barang.ID = 'B050000' ORDER BY BARCODE ASC LIMIT 1;
+
+SELECT 'Split-path candidate with barcode input' AS test_name;
+EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = '8999000000050000' ORDER BY BARCODE ASC LIMIT 1;
+
 SELECT 'Rack prefix lookup' AS test_name;
 EXPLAIN ANALYZE SELECT ID, NAMA, RAK_TOKO FROM m_barang WHERE RAK_TOKO LIKE 'T-050%' ORDER BY RAK_TOKO LIMIT 500;
 
