@@ -21,7 +21,7 @@ Creating an empty database called minimarket does not create the operational sch
 
 ## Benchmark corrections made in this branch
 
-- CREATED and UPDATED in core tables are now populated as DATETIME values because the corresponding v29 RowMappers read them using ResultSet.getDate(...). m_barang.HPP_UPDATED remains numeric because the DAO writes UNIX_TIMESTAMP() to that field.
+- The fixture populates date-like CREATED/UPDATED fields as DATETIME/NOW() because the Java path binds date values and RowMappers read them with getDate(...). This is a synthetic fixture choice, not proof of the original physical SQL type. m_barang.HPP_UPDATED remains numeric because the DAO writes UNIX_TIMESTAMP() to it.
 - m_barcode.ID is INT in line with BarcodeRowMapper.getInt("ID").
 - Removed the benchmark-only UNIQUE constraint on barcode and the foreign key from m_barcode to m_barang; neither constraint is proven by DAO source. Barcode lookup still has a non-unique index.
 - Removed the misleading unique constraint on m_role(role, menu); the source uses that pair for lookup/update but does not establish uniqueness.
@@ -30,7 +30,7 @@ Creating an empty database called minimarket does not create the operational sch
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
 - Added 03_benchmark_sanity_checks.sql to check exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
 
-These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed. The indexes retained in the seed are workload candidates based on observed DAO query shapes; the original production index set is still unverified.
+These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed. Exact physical types and the production index set still require the original schema export. The indexes retained in the seed are workload candidates based on observed DAO query shapes; the original production index set is still unverified.
 
 ## Confirmed query shapes
 
