@@ -2,9 +2,11 @@
 
 This document separates the LOCAL runtime database from the disposable performance benchmark.
 
-## Verified v29 runtime defaults
+## Verified v29 LOCAL login and database defaults
 
-KaryawanService creates a LOCAL DbCredential with these defaults:
+KaryawanService.authLoginOnline() permits the LOCAL development shortcut only when environment variables POS_LOCAL_USERNAME and POS_LOCAL_PASSWORD are set and match the supplied login. The shortcut creates a LOCAL credential; it does not authenticate by querying m_karyawan.
+
+The LOCAL database credential defaults are:
 
 - host: 127.0.0.1
 - port: 3306
@@ -13,7 +15,7 @@ KaryawanService creates a LOCAL DbCredential with these defaults:
 - password: empty string
 - branch name/code: LOCAL
 
-The values can be overridden with Java system properties:
+The database values can be overridden with Java system properties:
 
     -Dpos.local.db.host=127.0.0.1
     -Dpos.local.db.port=3306
@@ -46,9 +48,11 @@ The extracted package path is:
 
     extracted/pos-server-v29/POS server v29/minimarket.jar
 
-The package README specifies java -jar "minimarket.jar". For explicit LOCAL settings, run from the package directory:
+The package README specifies java -jar "minimarket.jar". For a LOCAL development login, set throwaway test credentials and run from the package directory. Do not reuse production credentials:
 
     cd ~/POS-SERVER/extracted/pos-server-v29/"POS server v29"
+    export POS_LOCAL_USERNAME='local-test-user'
+    export POS_LOCAL_PASSWORD='replace-with-a-throwaway-password'
     java -Dpos.local.db.host=127.0.0.1 \
          -Dpos.local.db.port=3306 \
          -Dpos.local.db.name=minimarket \
@@ -56,7 +60,7 @@ The package README specifies java -jar "minimarket.jar". For explicit LOCAL sett
          -Dpos.local.db.password='' \
          -jar minimarket.jar
 
-This starts the packaged desktop application; it does not create or migrate the database. A complete operational v29 schema is still required for successful LOCAL login and full POS workflow. No claim is made that this command has been run on the VPS.
+This starts the packaged desktop application; it does not create or migrate the database. A complete operational v29 schema is still required for successful LOCAL database initialization and full POS workflow. No claim is made that this command has been run on the VPS.
 
 ## Schema evidence
 
