@@ -4,12 +4,12 @@
 
 This inventory was compiled from the decompiled source under decompiled/pos-server-v29/minimart/engine. It records table/column names and dependencies explicitly observed in DAO SQL and RowMappers. It is **not** a replacement for the original DDL: source snippets do not reliably establish all column types, nullability, defaults, indexes, foreign keys, triggers, views, event jobs or stored procedures.
 
-## Core LOCAL login and catalogue
+## LOCAL login and core catalogue
 
 | Table | Source evidence | Observed columns / dependency |
 |---|---|---|
 | m_cabang | daoimpl/CabangDaoImpl.java, rowmapper/CabangRowMapper.java | ID, NAMA, ALAMAT, TIPE_TOKO, TIPE_CABANG |
-| m_karyawan | daoimpl/KaryawanDaoImpl.java, rowmapper/KaryawanRowMapper.java, model/Karyawan.java | ID, NAMA, PASSWORD, GAJI, ROLE, AVAILABLE, CREATED, UPDATED; lookup by ID/password with AVAILABLE = 1 |
+| m_karyawan | daoimpl/KaryawanDaoImpl.java, rowmapper/KaryawanRowMapper.java, model/Karyawan.java | ID, NAMA, PASSWORD, GAJI, ROLE, AVAILABLE, CREATED, UPDATED; DAO queries by ID/password with AVAILABLE = 1. This is not the LOCAL authentication shortcut. |
 | m_role | daoimpl/RoleDaoImpl.java, rowmapper/RoleRowMapper.java, model/Role.java | ID, ROLE, MENU, ACCESS, UPDATED, UPDATED_BY; access lookup/update by ROLE + MENU |
 | m_kasir | daoimpl/KasirDaoImpl.java, rowmapper/KasirRowMapper.java | ID, CREATED, UPDATED |
 | m_jenis | daoimpl/JenisDaoImpl.java, rowmapper/JenisRowMapper.java | JENIS, POIN_SALES, CREATED, UPDATED, MARGIN_CABANG, MARGIN_TEMPO |
@@ -32,7 +32,7 @@ This inventory was compiled from the decompiled source under decompiled/pos-serv
 | t_penjualan | daoimpl/PenjualanDaoImpl.java, rowmapper/PenjualanRowMapper.java | ID, M_CUSTOMER_ID, M_KARYAWAN_ID, M_SALES_ID, KASIR, TANGGAL, TOTAL_PENJUALAN, STATUS, STATUS_PELUNASAN, POIN, CREATED, UPDATED, JATUH_TEMPO, KETERANGAN, REFERENSI, M_SHIFT_KASIR_ID, VOUCHER, ID_TRANSAKSI_ONLINE, ELIGIBLE_PWP, ELIGIBLE_TEBUS_MURAH, LAMA_TRANSAKSI; reports join m_customer |
 | t_penjualan_detail | daoimpl/PenjualanDetailDaoImpl.java, rowmapper/PenjualanDetailRowMapper.java | ID, T_PENJUALAN_ID, M_BARANG_ID, JUMLAH_BARANG, SATUAN, DISCOUNT_2, HARGA_JUAL, TOTAL_HARGA, TOTAL_KEUNTUNGAN, CREATED, UPDATED, REFERENSI, PROMO; joins t_penjualan, m_barang, m_customer |
 | t_penjualan_sementara | daoimpl/PenjualanSementaraDaoImpl.java, rowmapper/PenjualanSementaraRowMapper.java | ID, KASIR, STATUS, SHORTCUT, M_CUSTOMER_ID, M_BARANG_ID, M_SALES_ID, JUMLAH_BARANG, SATUAN, HARGA_JUAL, DISCOUNT, TOTAL_HARGA, NOTA_KHUSUS, KETERANGAN, PICKINGLIST_ID, ID_TRANSAKSI_ONLINE, PROMO; joins m_barang, m_jenis |
-| m_shift_kasir | daoimpl/ShiftKasirDaoImpl.java, rowmapper/ShiftKasirRowMapper.java | ID, ID_KASIR, OPENED_BY, CLOSED_BY, OPENING, CLOSING, TOTAL_UANG, JUMLAH_SETORAN, TRANSFER, DEBIT, QRIS, VOUCHER, STATUS_SYNC_ONLINE; runtime source also adds/uses payment/sync fields |
+| m_shift_kasir | daoimpl/ShiftKasirDaoImpl.java, rowmapper/ShiftKasirRowMapper.java | ID, ID_KASIR, OPENED_BY, CLOSED_BY, OPENING, CLOSING, TOTAL_UANG, JUMLAH_SETORAN, TRANSFER, DEBIT, QRIS, VOUCHER, STATUS_SYNC_ONLINE |
 | m_customer | daoimpl/PenjualanDaoImpl.java, daoimpl/PenjualanDetailDaoImpl.java | Referenced by ID/name and joined to sales reports; full customer columns require further extraction |
 | m_sales, m_voucher | daoimpl/PenjualanDaoImpl.java and related DAOs | Referenced by sales headers and joins/queries; full DDL not yet reconstructed |
 
