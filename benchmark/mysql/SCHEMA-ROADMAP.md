@@ -78,7 +78,7 @@ Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
 | Split-path barcode candidate | 0.0181 ms | Barcode index then product primary key |
 | Rack prefix, 400 rows | 1.55 ms | Range scan on idx_barang_rak_toko |
 
-The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch: validate result precedence and edge cases, then build/test a separate DAO change before deploying it. CI timings are environment/cache dependent and are not a VPS performance guarantee.
+The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch. The read-only fixture script now checks result parity for normal product-ID and barcode inputs; unusual overlapping ID/barcode values, null behavior and full application integration still need review before a separate DAO change can be built/tested. CI timings are environment/cache dependent and are not a VPS performance guarantee.
 
 ## Next step to complete a real LOCAL test database
 
