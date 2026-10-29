@@ -18,10 +18,14 @@ EXPLAIN ANALYZE SELECT M_BARANG_ID, SATUAN, BARCODE FROM m_barcode WHERE BARCODE
 SELECT 'Barcode lookup with product join' AS test_name;
 EXPLAIN ANALYZE SELECT b.ID, b.NAMA, b.HARGA_JUAL_1, bc.SATUAN, bc.BARCODE FROM m_barcode AS bc JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID WHERE bc.BARCODE = '8999000000050000' LIMIT 1;
 
--- Representative combined predicate from BarangDaoImpl. Do not treat this as a barcode-only benchmark:
--- the product-ID OR branch may be selected by the optimizer.
-SELECT 'DAO combined ID-or-barcode lookup' AS test_name;
-EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = '8999000000050000' OR m_barang.ID = 'B050000' ORDER BY BARCODE ASC LIMIT 1;
+-- BarangDaoImpl binds the SAME search value to both sides of this OR. Keep the
+-- product-ID and barcode cases separate so the benchmark does not test an impossible
+-- mixed input that matches two different rows.
+SELECT 'DAO combined lookup with product ID input' AS test_name;
+EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = 'B050000' OR m_barang.ID = 'B050000' ORDER BY BARCODE ASC LIMIT 1;
+
+SELECT 'DAO combined lookup with barcode input' AS test_name;
+EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = '8999000000050000' OR m_barang.ID = '8999000000050000' ORDER BY BARCODE ASC LIMIT 1;
 
 SELECT 'Rack prefix lookup' AS test_name;
 EXPLAIN ANALYZE SELECT ID, NAMA, RAK_TOKO FROM m_barang WHERE RAK_TOKO LIKE 'T-050%' ORDER BY RAK_TOKO LIMIT 500;
