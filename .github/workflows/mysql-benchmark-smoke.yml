@@ -1,6 +1,12 @@
 name: MySQL benchmark smoke test
 
 on:
+  push:
+    branches:
+      - automation/v29-schema-benchmark-audit
+    paths:
+      - "benchmark/mysql/**"
+      - ".github/workflows/mysql-benchmark-smoke.yml"
   pull_request:
     paths:
       - "benchmark/mysql/**"
