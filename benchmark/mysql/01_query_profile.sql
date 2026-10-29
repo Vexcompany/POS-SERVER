@@ -1,6 +1,8 @@
 -- Run after 00_synthetic_core_benchmark.sql in minimarket_benchmark only.
 -- MySQL 8.0.18+: EXPLAIN ANALYZE executes each SELECT and reports actual timing.
 -- This profiles query shapes observed in BarangDaoImpl and KaryawanDaoImpl.
+-- The LOCAL development login gate itself is environment-variable based; these
+-- m_karyawan queries profile DAO access, not the LOCAL authentication shortcut.
 USE minimarket_benchmark;
 
 SELECT 'Exact product ID (primary key)' AS test_name;
@@ -55,11 +57,17 @@ WHERE RAK_TOKO LIKE 'T-050%'
 ORDER BY RAK_TOKO
 LIMIT 500;
 
-SELECT 'LOCAL employee lookup by ID and availability' AS test_name;
+SELECT 'Employee DAO lookup by ID and availability' AS test_name;
 EXPLAIN ANALYZE
 SELECT id, nama, role, available
 FROM m_karyawan
 WHERE id = 'GIO_415' AND available = 1;
+
+SELECT 'Employee DAO lookup by password and availability' AS test_name;
+EXPLAIN ANALYZE
+SELECT id, nama, role, available
+FROM m_karyawan
+WHERE password = 'GIO_415' AND available = 1;
 
 SELECT 'Exact row counts' AS test_name;
 SELECT 'm_barang' AS tabel, COUNT(*) AS jumlah FROM m_barang
