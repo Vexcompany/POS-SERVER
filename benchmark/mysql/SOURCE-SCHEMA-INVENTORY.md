@@ -66,7 +66,7 @@ The synthetic benchmark is intentionally limited to m_cabang, m_jenis, m_karyawa
 - m_role(role, menu) is indexed but not declared unique because uniqueness is not established by DAO source evidence.
 - The index formerly named idx_barang_barcode_search was removed because its columns did not match the barcode lookup query.
 
-These choices improve consistency with observed source behavior but do not prove that the benchmark DDL equals the original production DDL.
+The indexes retained in the seed are benchmark candidates selected from observed DAO query shapes, not verified production indexes. These choices improve consistency with observed source behavior but do not prove that the benchmark DDL equals the original production DDL.
 
 ## What is still needed for a full LOCAL test
 
