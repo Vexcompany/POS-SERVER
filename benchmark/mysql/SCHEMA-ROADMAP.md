@@ -67,16 +67,16 @@ Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
 
 | Query shape | Actual time | Plan observation |
 |---|---:|---|
-| Exact product ID | 0.0043 ms | Constant/primary-key result |
-| Product name prefix, 50 rows | 0.0697 ms | Range scan on idx_barang_nama |
-| Product name contains, 100 rows | 8.68 ms | Leading wildcard; scans about 10,100 index entries |
-| Exact barcode | 0.0159 ms | Lookup via idx_barcode_lookup |
-| Barcode + product join | 0.0203 ms | Barcode index, then product primary key |
-| Existing DAO OR query, product-ID input | 766 ms | Scans 100,000 products, visits 300,000 joined barcode rows, then sorts |
-| Existing DAO OR query, barcode input | 761 ms | Same full join/scan pattern |
-| Split-path product-ID candidate | 0.0299 ms | Product primary key then three barcode rows |
-| Split-path barcode candidate | 0.0181 ms | Barcode index then product primary key |
-| Rack prefix, 400 rows | 1.55 ms | Range scan on idx_barang_rak_toko |
+| Exact product ID | 0.0054 ms | Single-row ID result |
+| Product name prefix, 50 rows | 0.0712 ms | Range scan on idx_barang_nama |
+| Product name contains, 100 rows | 7.35 ms | Leading wildcard; scans about 10,100 index entries |
+| Exact barcode | 0.0146 ms | Lookup via idx_barcode_lookup |
+| Barcode + product join | 0.0198 ms | Barcode index, then product primary key |
+| Existing DAO OR query, product-ID input | 738 ms | Scans 100,000 products, visits 300,000 joined barcode rows, then sorts |
+| Existing DAO OR query, barcode input | 779 ms | Same full join/scan pattern |
+| Split-path product-ID candidate | 0.0328 ms | Product primary key then three barcode rows |
+| Split-path barcode candidate | 0.0213 ms | Barcode index then product primary key |
+| Rack prefix, 400 rows | 2.53 ms | Range scan on idx_barang_rak_toko |
 
 The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch. The read-only fixture script now checks result parity for normal product-ID and barcode inputs; unusual overlapping ID/barcode values, null behavior and full application integration still need review before a separate DAO change can be built/tested. CI timings are environment/cache dependent and are not a VPS performance guarantee.
 
