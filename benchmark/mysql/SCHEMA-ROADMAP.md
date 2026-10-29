@@ -8,7 +8,9 @@ See **SOURCE-SCHEMA-INVENTORY.md** for the current table/dependency map and sour
 
 ## LOCAL runtime boundary
 
-KaryawanService defaults the LOCAL connection to MySQL 127.0.0.1:3306, database **minimarket**, user root, empty password, branch code/name LOCAL. The pos.local.db.* Java system properties can override these defaults. ConnectionManager builds the JDBC URL from the credential object.
+KaryawanService.authLoginOnline() has a LOCAL development shortcut gated by the POS_LOCAL_USERNAME and POS_LOCAL_PASSWORD environment variables. When those match, it creates a LOCAL credential that defaults to MySQL 127.0.0.1:3306, database minimarket, user root, empty password, branch code/name LOCAL. The pos.local.db.* Java system properties can override the database settings. ConnectionManager builds the JDBC URL from the credential object.
+
+The LOCAL authentication shortcut does not authenticate by looking up m_karyawan. The m_karyawan DAO queries are separate application data access paths.
 
 Keep the schemas separate:
 
@@ -26,7 +28,7 @@ Creating an empty database called minimarket does not create the operational sch
 - Removed the unexplained idx_barang_barcode_search index because it was not aligned with actual barcode lookup SQL.
 - Query profiling now separates barcode lookup from product-ID lookup. The prior OR predicate could let the optimizer choose the primary-key branch and conceal barcode-index behavior.
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
-- Added 03_benchmark_sanity_checks.sql to check the exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
+- Added 03_benchmark_sanity_checks.sql to check exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
 
 These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed.
 
@@ -36,7 +38,7 @@ These are synthetic benchmark choices informed by source evidence, not a claim t
 - Product/barcode: m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID, filtered by barcode or product ID and ordered by barcode
 - Product name search: M_JENIS_JENIS NOT LIKE ... AND NAMA LIKE ?, ordered by category/name
 - Rack search: RAK_TOKO LIKE ? ORDER BY RAK_TOKO
-- Employee login lookup: m_karyawan by ID and available = 1; password lookup uses password = ? AND available = 1
+- Employee DAO: m_karyawan by ID/password and AVAILABLE = 1; this is not the LOCAL development login gate
 - Stock opname joins: stok_opnam, stok_opnam_detail, and m_barang
 - Sales reporting: t_penjualan, t_penjualan_detail, m_barang, and m_customer
 - Purchasing: t_pembelian, t_pembelian_detail, m_supplier, and m_barang
