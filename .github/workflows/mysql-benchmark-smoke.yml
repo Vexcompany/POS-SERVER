@@ -1,0 +1,74 @@
+name: MySQL benchmark smoke test
+
+on:
+  pull_request:
+    paths:
+      - "benchmark/mysql/**"
+      - ".github/workflows/mysql-benchmark-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: benchmark-root-only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --protocol=tcp -h 127.0.0.1 -uroot -pbenchmark-root-only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=18
+    env:
+      MYSQL_PWD: benchmark-root-only
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install MySQL client if needed
+        run: |
+          if ! command -v mysql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y mysql-client
+          fi
+          mysql --version
+
+      - name: Verify disposable MySQL service
+        run: mysql --protocol=tcp --host=127.0.0.1 --port=3306 --user=root -e "SELECT VERSION() AS mysql_version;"
+
+      - name: Seed disposable benchmark database
+        run: mysql --protocol=tcp --host=127.0.0.1 --port=3306 --user=root < benchmark/mysql/00_synthetic_core_benchmark.sql
+
+      - name: Verify generated fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          mysql --protocol=tcp --host=127.0.0.1 --port=3306 --user=root < benchmark/mysql/03_benchmark_sanity_checks.sql | tee sanity-checks.log
+          if grep -q "FAIL" sanity-checks.log; then
+            echo "Synthetic fixture sanity check failed."
+            exit 1
+          fi
+
+      - name: Run query profiles and capture actual plans
+        shell: bash
+        run: |
+          set -euo pipefail
+          mysql --protocol=tcp --host=127.0.0.1 --port=3306 --user=root < benchmark/mysql/01_query_profile.sql | tee benchmark-profile.log
+
+      - name: Upload benchmark profile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-benchmark-profile
+          path: |
+            benchmark-profile.log
+            sanity-checks.log
+          if-no-files-found: ignore
+          retention-days: 7
