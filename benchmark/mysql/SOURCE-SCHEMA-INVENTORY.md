@@ -33,8 +33,9 @@ This inventory was compiled from the decompiled source under decompiled/pos-serv
 | t_penjualan_detail | daoimpl/PenjualanDetailDaoImpl.java, rowmapper/PenjualanDetailRowMapper.java | ID, T_PENJUALAN_ID, M_BARANG_ID, JUMLAH_BARANG, SATUAN, DISCOUNT_2, HARGA_JUAL, TOTAL_HARGA, TOTAL_KEUNTUNGAN, CREATED, UPDATED, REFERENSI, PROMO, STATUS_SYNC_ONLINE; joins t_penjualan, m_barang, m_customer |
 | t_penjualan_sementara | daoimpl/PenjualanSementaraDaoImpl.java, rowmapper/PenjualanSementaraRowMapper.java | ID, KASIR, STATUS, SHORTCUT, M_CUSTOMER_ID, M_BARANG_ID, M_SALES_ID, JUMLAH_BARANG, SATUAN, HARGA_JUAL, DISCOUNT, TOTAL_HARGA, NOTA_KHUSUS, KETERANGAN, PICKINGLIST_ID, ID_TRANSAKSI_ONLINE, PROMO; joins m_barang, m_jenis |
 | m_shift_kasir | daoimpl/ShiftKasirDaoImpl.java, rowmapper/ShiftKasirRowMapper.java | ID, ID_KASIR, OPENED_BY, CLOSED_BY, OPENING, CLOSING, TOTAL_UANG, JUMLAH_SETORAN, TRANSFER, DEBIT, QRIS, VOUCHER, STATUS_SYNC_ONLINE |
-| m_customer | daoimpl/PenjualanDaoImpl.java, daoimpl/PenjualanDetailDaoImpl.java | Referenced by ID/name and joined to sales reports; full customer columns require further extraction |
-| m_sales, m_voucher | daoimpl/PenjualanDaoImpl.java and related DAOs | Referenced by sales headers and joins/queries; full DDL not yet reconstructed |
+| m_customer | rowmapper/CustomerRowMapper.java, daoimpl/CustomerDaoImpl.java, sales DAOs | ID, KTP, NAMA, ALAMAT, KOTA, TANGGAL_LAHIR, TELEPON, HUTANG, POINT, AVAILABLE, CREATED, UPDATED, LIMIT_KREDIT, TOP, TIPE, KETERANGAN, TAG, NAMA_PERUSAHAAN, createdByCabang, nomor_rekening, bank, idCabang |
+| m_sales | rowmapper/SalesRowMapper.java and sales DAOs | ID, ALAMAT, KTP, NAMA, TELEPON, TARGET; referenced by sales headers |
+| m_voucher | rowmapper/VoucherRowMapper.java and sales DAOs | ID, M_CUSTOMER_ID, JUMLAH, AVAILABLE, EXPIRED_DATE, EXCHANGE_DATE; referenced by sales headers |
 
 ## Stock, purchasing and package dependencies
 
