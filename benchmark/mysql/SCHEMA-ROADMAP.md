@@ -30,7 +30,7 @@ Creating an empty database called minimarket does not create the operational sch
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
 - Added 03_benchmark_sanity_checks.sql to check exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
 
-These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed.
+These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed. The indexes retained in the seed are workload candidates based on observed DAO query shapes; the original production index set is still unverified.
 
 ## Confirmed query shapes
 
