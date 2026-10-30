@@ -42,11 +42,11 @@ SELECT 'm_barang HPP DECIMAL(14,2)',
            AND NUMERIC_PRECISION = 14 AND NUMERIC_SCALE = 2
        ), 'PASS', 'FAIL')
 UNION ALL
-SELECT 'm_barang CREATED and UPDATED BIGINT',
+SELECT 'm_barang HPP_UPDATED, CREATED and UPDATED BIGINT',
        IF(
          (SELECT COUNT(*) FROM information_schema.COLUMNS
           WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
-            AND COLUMN_NAME IN ('CREATED','UPDATED') AND DATA_TYPE = 'bigint') = 2,
+            AND COLUMN_NAME IN ('HPP_UPDATED','CREATED','UPDATED') AND DATA_TYPE = 'bigint') = 3,
          'PASS', 'FAIL')
 UNION ALL
 SELECT 'm_barang legacy idx_barang_barcode_search shape',
