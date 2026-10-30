@@ -21,16 +21,16 @@ Creating an empty database called minimarket does not create the operational sch
 
 ## Benchmark corrections made in this branch
 
-- The fixture populates date-like CREATED/UPDATED fields as DATETIME/NOW() because the Java path binds date values and RowMappers read them with getDate(...). This is a synthetic fixture choice, not proof of the original physical SQL type. m_barang.HPP_UPDATED remains numeric because the DAO writes UNIX_TIMESTAMP() to it.
+- The m_barang fixture now matches the supplied SHOW CREATE TABLE evidence: KONVERSI_*, BATAS_ATAS_STOCK, REORDER_POINT and stock quantities use DECIMAL(14,3); HARGA_JUAL_* and HPP use DECIMAL(14,2); HPP_UPDATED, CREATED and UPDATED use BIGINT. The observed BIGINT date columns override the earlier DATETIME guess based only on ResultSet.getDate(). Other fixture-table date types remain unverified.
 - m_barcode.ID is INT in line with BarcodeRowMapper.getInt("ID").
 - Removed the benchmark-only UNIQUE constraint on barcode and the foreign key from m_barcode to m_barang; neither constraint is proven by DAO source. Barcode lookup still has a non-unique index.
 - Removed the misleading unique constraint on m_role(role, menu); the source uses that pair for lookup/update but does not establish uniqueness.
-- Removed the unexplained idx_barang_barcode_search index because it was not aligned with actual barcode lookup SQL.
+- Preserved the observed legacy idx_barang_barcode_search index as (M_JENIS_JENIS, STOK_TOKO). Its name is misleading: it does not index BARCODE and is not used as the barcode lookup index.
 - Query profiling now separates barcode lookup from product-ID lookup. The prior OR predicate could let the optimizer choose the primary-key branch and conceal barcode-index behavior.
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
 - Added 03_benchmark_sanity_checks.sql to check exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
 
-These are synthetic benchmark choices informed by source evidence, not a claim that the production DDL has been reconstructed. Exact physical types and the production index set still require the original schema export. The indexes retained in the seed are workload candidates based on observed DAO query shapes; the original production index set is still unverified.
+The m_barang definitions above are backed by the user's supplied SHOW CREATE TABLE / SHOW INDEX output for the benchmark table. This is table-specific evidence, not a complete production DDL. The other five fixture tables still use explicitly labeled synthetic choices. The benchmark remains non-operational and cannot be imported into minimarket as a complete LOCAL schema.
 
 ## Confirmed query shapes
 
