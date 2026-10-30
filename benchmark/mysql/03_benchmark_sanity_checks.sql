@@ -98,8 +98,8 @@ FROM (
     HAVING COUNT(bc.ID) <> 3
 ) AS mismatches;
 
--- Check candidate result parity for the two normal input formats before considering
--- any DAO rewrite. These checks compare the current OR query with its split lookup path.
+-- Compare the old DAO query with both the naive split and the UNION candidate
+-- for ordinary product-ID and barcode inputs.
 WITH old_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barang AS b
@@ -115,15 +115,33 @@ split_result AS (
     WHERE b.ID = 'B050000'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B050000'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B050000' AND b.ID <> 'B050000'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
 )
-SELECT 'product ID input old-vs-split parity' AS check_name,
+SELECT 'product ID input old-vs-candidate parity' AS check_name,
        old_result.product_id AS old_product_id,
        split_result.product_id AS split_product_id,
-       old_result.barcode AS old_barcode,
-       split_result.barcode AS split_barcode,
+       union_result.product_id AS union_product_id,
        IF(old_result.product_id <=> split_result.product_id
-          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
-FROM old_result CROSS JOIN split_result;
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS naive_split_status,
+       IF(old_result.product_id <=> union_result.product_id
+          AND old_result.barcode <=> union_result.barcode, 'PASS', 'FAIL') AS union_status
+FROM old_result CROSS JOIN split_result CROSS JOIN union_result;
 
 WITH old_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
@@ -141,15 +159,34 @@ split_result AS (
     WHERE bc.BARCODE = '8999000000050000'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '8999000000050000'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '8999000000050000'
+      AND b.ID <> '8999000000050000'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
 )
-SELECT 'barcode input old-vs-split parity' AS check_name,
+SELECT 'barcode input old-vs-candidate parity' AS check_name,
        old_result.product_id AS old_product_id,
        split_result.product_id AS split_product_id,
-       old_result.barcode AS old_barcode,
-       split_result.barcode AS split_barcode,
+       union_result.product_id AS union_product_id,
        IF(old_result.product_id <=> split_result.product_id
-          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
-FROM old_result CROSS JOIN split_result;
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS naive_split_status,
+       IF(old_result.product_id <=> union_result.product_id
+          AND old_result.barcode <=> union_result.barcode, 'PASS', 'FAIL') AS union_status
+FROM old_result CROSS JOIN split_result CROSS JOIN union_result;
 
 -- The original DAO OR query can match both a product ID and a barcode.
 -- The fixture deliberately maps BARCODE='B099999' to product B050001 while product
