@@ -4,10 +4,11 @@
 -- MySQL 8.0+ required for the recursive CTE; EXPLAIN ANALYZE requires 8.0.18+.
 --
 -- This is not a complete operational schema. Column names and JDBC access patterns are
--- source-backed, but physical production SQL types are not available from RowMappers alone.
--- DATETIME/BIGINT/INT choices below are for this disposable fixture and must be checked
--- against an original DDL before runtime use. Indexes are benchmark candidates, not claims
--- about production indexes. Unproven uniqueness/FK constraints are omitted.
+-- source-backed. m_barang physical types/indexes mirror the SHOW CREATE TABLE / SHOW INDEX
+-- output supplied by the user for that benchmark table; the other fixture tables still use
+-- explicitly synthetic type choices because their DDL is unavailable. Indexes on those
+-- other tables are benchmark candidates, not claims about production. Unproven uniqueness/
+-- FK constraints are omitted.
 
 CREATE DATABASE IF NOT EXISTS minimarket_benchmark
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
