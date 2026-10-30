@@ -42,6 +42,24 @@ These commands are read-only:
 
 If minimarket is empty, do not import 00_synthetic_core_benchmark.sql into it. That script drops/recreates benchmark tables only inside minimarket_benchmark, and it cannot supply the full operational schema.
 
+## Export the original schema safely (only from a source DB that has the real v29 schema)
+
+The VPS discussed in this setup currently has no confirmed operational v29 schema. Do not run this against an empty `minimarket` database and do not treat an empty export as useful evidence. Run it on the original/source MySQL host that actually contains the v29 branch database:
+
+```bash
+sudo mysqldump --no-data --routines --triggers --events \
+  --single-transaction --skip-lock-tables minimarket \
+  > "$HOME/minimarket-v29-schema-only.sql"
+
+test -s "$HOME/minimarket-v29-schema-only.sql"
+sha256sum "$HOME/minimarket-v29-schema-only.sql"
+```
+
+- `--no-data` excludes table rows; `--routines --triggers --events` captures programmable schema objects needed by some workflows.
+- This does not export users/grants. Review the output for `DEFINER` clauses or internal hostnames before sharing it.
+- Keep the export outside the application database. Do not import it directly into `minimarket` or production. First review it against SOURCE-SCHEMA-INVENTORY.md, then import into a newly named disposable schema after resolving the database name and any DEFINER dependencies.
+- If the original v29 database is unavailable, stop here rather than synthesizing missing tables/procedures from DAO names.
+
 ## Run the packaged application (only after the real schema is present)
 
 The extracted package path is:

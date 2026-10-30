@@ -14,6 +14,50 @@ SELECT 'm_barcode row count',
        IF(COUNT(*) = 300000, 'PASS', 'FAIL')
 FROM m_barcode;
 
+-- DDL contract based on the m_barang SHOW CREATE TABLE / SHOW INDEX evidence
+-- supplied for the user's v29 benchmark database. These checks prevent a future
+-- fixture edit from silently drifting back to integer money/quantity or DATETIME
+-- timestamps for m_barang.
+SELECT 'm_barang KONVERSI_21 DECIMAL(14,3)' AS check_name,
+       IF(EXISTS (
+         SELECT 1 FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
+           AND COLUMN_NAME = 'KONVERSI_21' AND DATA_TYPE = 'decimal'
+           AND NUMERIC_PRECISION = 14 AND NUMERIC_SCALE = 3
+       ), 'PASS', 'FAIL') AS status
+UNION ALL
+SELECT 'm_barang HARGA_JUAL_1 DECIMAL(14,2)',
+       IF(EXISTS (
+         SELECT 1 FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
+           AND COLUMN_NAME = 'HARGA_JUAL_1' AND DATA_TYPE = 'decimal'
+           AND NUMERIC_PRECISION = 14 AND NUMERIC_SCALE = 2
+       ), 'PASS', 'FAIL')
+UNION ALL
+SELECT 'm_barang HPP DECIMAL(14,2)',
+       IF(EXISTS (
+         SELECT 1 FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
+           AND COLUMN_NAME = 'HPP' AND DATA_TYPE = 'decimal'
+           AND NUMERIC_PRECISION = 14 AND NUMERIC_SCALE = 2
+       ), 'PASS', 'FAIL')
+UNION ALL
+SELECT 'm_barang HPP_UPDATED, CREATED and UPDATED BIGINT',
+       IF(
+         (SELECT COUNT(*) FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
+            AND COLUMN_NAME IN ('HPP_UPDATED','CREATED','UPDATED') AND DATA_TYPE = 'bigint') = 3,
+         'PASS', 'FAIL')
+UNION ALL
+SELECT 'm_barang legacy idx_barang_barcode_search shape',
+       IF(
+         (SELECT GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX SEPARATOR ',')
+          FROM information_schema.STATISTICS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'm_barang'
+            AND INDEX_NAME = 'idx_barang_barcode_search')
+          = 'M_JENIS_JENIS,STOK_TOKO',
+         'PASS', 'FAIL');
+
 SELECT 'known product and generated PCS barcode' AS check_name,
        expected.ID AS expected_id,
        b.ID AS actual_id,

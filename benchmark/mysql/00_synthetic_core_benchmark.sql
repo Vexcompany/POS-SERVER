@@ -4,10 +4,11 @@
 -- MySQL 8.0+ required for the recursive CTE; EXPLAIN ANALYZE requires 8.0.18+.
 --
 -- This is not a complete operational schema. Column names and JDBC access patterns are
--- source-backed, but physical production SQL types are not available from RowMappers alone.
--- DATETIME/BIGINT/INT choices below are for this disposable fixture and must be checked
--- against an original DDL before runtime use. Indexes are benchmark candidates, not claims
--- about production indexes. Unproven uniqueness/FK constraints are omitted.
+-- source-backed. m_barang physical types/indexes mirror the SHOW CREATE TABLE / SHOW INDEX
+-- output supplied by the user for that benchmark table; the other fixture tables still use
+-- explicitly synthetic type choices because their DDL is unavailable. Indexes on those
+-- other tables are benchmark candidates, not claims about production. Unproven uniqueness/
+-- FK constraints are omitted.
 
 CREATE DATABASE IF NOT EXISTS minimarket_benchmark
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -66,9 +67,11 @@ CREATE TABLE m_role (
   KEY idx_role_role_menu (role, menu)
 ) ENGINE=InnoDB;
 
--- Columns are taken from BarangDaoImpl and BarangRowMapper.
--- HPP_UPDATED is numeric (BarangDaoImpl writes UNIX_TIMESTAMP()). CREATED/UPDATED are
--- date-like in the Java path; DATETIME is a fixture choice, not verified production DDL.
+-- Physical types and indexes in this m_barang fixture match the SHOW CREATE TABLE and
+-- SHOW INDEX output supplied for the user's v29 benchmark table. This evidence is for
+-- m_barang only; it is not a complete operational schema or proof for the other tables.
+-- CREATED/UPDATED are BIGINT in that observed DDL even though BarangRowMapper calls
+-- ResultSet.getDate(). HPP_UPDATED is BIGINT and BarangDaoImpl writes UNIX_TIMESTAMP().
 CREATE TABLE m_barang (
   ID VARCHAR(40) NOT NULL PRIMARY KEY,
   M_JENIS_JENIS VARCHAR(120) NOT NULL DEFAULT '',
@@ -78,23 +81,23 @@ CREATE TABLE m_barang (
   SATUAN_1 VARCHAR(40) NOT NULL DEFAULT 'PCS',
   SATUAN_2 VARCHAR(40) NOT NULL DEFAULT '',
   SATUAN_3 VARCHAR(40) NOT NULL DEFAULT '',
-  KONVERSI_21 INT NOT NULL DEFAULT 1,
-  KONVERSI_32 INT NOT NULL DEFAULT 1,
-  BATAS_ATAS_STOCK BIGINT NOT NULL DEFAULT 0,
-  REORDER_POINT BIGINT NOT NULL DEFAULT 0,
-  HARGA_JUAL_1 BIGINT NOT NULL DEFAULT 0,
-  HARGA_JUAL_2 BIGINT NOT NULL DEFAULT 0,
-  HARGA_JUAL_3 BIGINT NOT NULL DEFAULT 0,
+  KONVERSI_21 DECIMAL(14,3) NOT NULL DEFAULT 1.000,
+  KONVERSI_32 DECIMAL(14,3) NOT NULL DEFAULT 1.000,
+  BATAS_ATAS_STOCK DECIMAL(14,3) NOT NULL DEFAULT 0.000,
+  REORDER_POINT DECIMAL(14,3) NOT NULL DEFAULT 0.000,
+  HARGA_JUAL_1 DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  HARGA_JUAL_2 DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  HARGA_JUAL_3 DECIMAL(14,2) NOT NULL DEFAULT 0.00,
   MIN_PEMBELIAN DECIMAL(14,3) NOT NULL DEFAULT 0,
   MIN_PERSEN DECIMAL(8,2) NOT NULL DEFAULT 0,
   STOK_TOKO DECIMAL(14,3) NOT NULL DEFAULT 0,
   STOK_GUDANG DECIMAL(14,3) NOT NULL DEFAULT 0,
   STOK_BS DECIMAL(14,3) NOT NULL DEFAULT 0,
   UPDATE_HARGA INT NOT NULL DEFAULT 0,
-  HPP BIGINT NOT NULL DEFAULT 0,
-  HPP_UPDATED BIGINT NULL,
-  CREATED DATETIME NULL,
-  UPDATED DATETIME NULL,
+  HPP DECIMAL(14,2) NOT NULL DEFAULT 0.00,
+  HPP_UPDATED BIGINT DEFAULT NULL,
+  CREATED BIGINT DEFAULT NULL,
+  UPDATED BIGINT DEFAULT NULL,
   STOK_PUSAT DECIMAL(14,3) NOT NULL DEFAULT 0,
   PARENT_ID VARCHAR(40) NOT NULL DEFAULT '',
   TAG VARCHAR(120) NULL,
@@ -104,8 +107,9 @@ CREATE TABLE m_barang (
   KEY idx_barang_rak_toko (RAK_TOKO),
   KEY idx_barang_rak_gudang (RAK_GUDANG),
   KEY idx_barang_parent (PARENT_ID),
-  KEY idx_barang_update_harga (UPDATE_HARGA)
-) ENGINE=InnoDB;
+  KEY idx_barang_update_harga (UPDATE_HARGA),
+  KEY idx_barang_barcode_search (M_JENIS_JENIS, STOK_TOKO)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- BarcodeRowMapper reads ID as int. INT and DATETIME are fixture choices. Barcode
 -- uniqueness and a physical FK are not asserted by the DAO source, so omit those constraints.
@@ -143,6 +147,8 @@ INSERT INTO m_role (id,role,menu,access,updated,updated_by) VALUES
 -- Generate 100,000 synthetic products. No real customer/employee data.
 -- To test smaller scale, change 100000 to 10000.
 SET SESSION cte_max_recursion_depth = 100001;
+SET @fixture_now = CAST(DATE_FORMAT(NOW(), '%Y%m%d%H%i%s') AS UNSIGNED);
+
 INSERT INTO m_barang
 (ID,M_JENIS_JENIS,RAK_GUDANG,RAK_TOKO,NAMA,SATUAN_1,SATUAN_2,SATUAN_3,
  KONVERSI_21,KONVERSI_32,BATAS_ATAS_STOCK,REORDER_POINT,
@@ -164,7 +170,7 @@ SELECT
   1,5,
   MOD(n*7,400),MOD(n*11,700),MOD(n,15),
   MOD(n,2),500+MOD(n*19,25000),UNIX_TIMESTAMP(),
-  NOW(),NOW(),MOD(n*13,900),
+  @fixture_now,@fixture_now,MOD(n*13,900),
   '',IF(MOD(n,3)=0,'PROMO',NULL),365
 FROM seq;
 
