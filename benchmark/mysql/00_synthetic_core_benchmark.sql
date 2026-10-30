@@ -185,6 +185,13 @@ INSERT INTO m_barcode (M_BARANG_ID,SATUAN,BARCODE,CREATED,UPDATED)
 SELECT ID,'PACK',CONCAT('899920',LPAD(SUBSTRING(ID,2),10,'0')),NOW(),NOW()
 FROM m_barang;
 
+-- Intentional edge case: the barcode for product B050001 equals another product's ID.
+-- Keep the total at exactly three barcodes per product while testing the original
+-- BarangDaoImpl OR + ORDER BY semantics when an input matches both namespaces.
+UPDATE m_barcode
+SET BARCODE = 'B099999'
+WHERE M_BARANG_ID = 'B050001' AND SATUAN = 'PACK';
+
 ANALYZE TABLE m_barang, m_barcode, m_karyawan, m_role, m_jenis, m_cabang;
 
 -- Exact row counts (unlike information_schema.TABLES.TABLE_ROWS, which is estimated).
