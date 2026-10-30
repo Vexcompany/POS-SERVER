@@ -84,7 +84,7 @@ SELECT 'intentional cross-namespace collision row' AS check_name,
 FROM m_barcode
 WHERE M_BARANG_ID = 'B050001'
   AND SATUAN = 'PACK'
-  AND BARCODE = 'B099999';
+  AND BARCODE = '000001';
 
 SELECT 'products without exactly three barcodes' AS check_name,
        COUNT(*) AS actual_value,
@@ -189,14 +189,14 @@ SELECT 'barcode input old-vs-candidate parity' AS check_name,
 FROM old_result CROSS JOIN split_result CROSS JOIN union_result;
 
 -- The original DAO OR query can match both a product ID and a barcode.
--- The fixture deliberately maps BARCODE='B099999' to product B050001 while product
--- B099999 also exists. A naive ID-only split changes the result; the UNION candidate
+-- The fixture deliberately maps BARCODE='000001' to product B050001 while product
+-- 000001 also exists. A naive ID-only split changes the result; the UNION candidate
 -- must preserve the old query's selected product and sort barcode.
 WITH old_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barang AS b
     LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
-    WHERE bc.BARCODE = 'B099999' OR b.ID = 'B099999'
+    WHERE bc.BARCODE = '000001' OR b.ID = '000001'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
 ),
@@ -204,7 +204,7 @@ split_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barang AS b
     LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
-    WHERE b.ID = 'B099999'
+    WHERE b.ID = '000001'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
 ),
@@ -212,12 +212,12 @@ union_candidates AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barang AS b
     LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
-    WHERE b.ID = 'B099999'
+    WHERE b.ID = '000001'
     UNION ALL
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barcode AS bc
     JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
-    WHERE bc.BARCODE = 'B099999' AND b.ID <> 'B099999'
+    WHERE bc.BARCODE = '000001' AND b.ID <> '000001'
 ),
 union_result AS (
     SELECT product_id, barcode
