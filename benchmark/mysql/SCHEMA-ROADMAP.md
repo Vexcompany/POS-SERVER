@@ -78,7 +78,7 @@ Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
 | Split-path barcode candidate | 0.0213 ms | Barcode index then product primary key |
 | Rack prefix, 400 rows | 2.53 ms | Range scan on idx_barang_rak_toko |
 
-The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch. The read-only fixture script now checks result parity for normal product-ID and barcode inputs; unusual overlapping ID/barcode values, null behavior and full application integration still need review before a separate DAO change can be built/tested. CI timings are environment/cache dependent and are not a VPS performance guarantee.
+The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. The original query scans the full product set and expands all joined barcode rows before filtering/sorting. The initial split-by-input candidate is fast for normal inputs but is not semantically equivalent when a string exists as both a product ID and another product's barcode. A deliberate collision fixture now proves that case; a UNION ALL candidate preserves the original selected product/order while using the primary-key and barcode indexes separately. This remains a benchmark candidate, not a production DAO patch. Null behavior, broader duplicate-barcode cases and full application integration still need review. CI timings are environment/cache dependent and are not a VPS performance guarantee.
 
 ## DDL-aligned synthetic CI baseline (2026-10-30)
 
@@ -100,6 +100,30 @@ The updated seed and DDL-contract sanity checks passed in isolated GitHub Action
 All DDL contract checks passed, including DECIMAL precision, BIGINT timestamp columns, and the observed `idx_barang_barcode_search (M_JENIS_JENIS, STOK_TOKO)` shape. Fixture checks also passed: 100,000 products, 300,000 barcodes, 1,000 prefix matches, known B050000 barcode, three barcodes per product, and normal-input old-vs-split result parity.
 
 The OR query still scans all 100,000 products and expands 300,000 joined barcode rows before filtering/sorting. The split candidates remain dramatically faster in this synthetic fixture, but the timings vary by runner/cache and do not prove that a production DAO rewrite is safe. The previous 2026-10-29 baseline is retained above for historical comparison; do not compare these runs as a controlled before/after unless hardware, cache and schema are held constant.
+
+## Collision-safe DAO lookup candidate (2026-10-30)
+
+The collision fixture and full `BarangRowMapper` projection passed in isolated MySQL 8.4.13 GitHub Actions run [#40991590479](https://github.com/Vexcompany/POS-SERVER/actions/runs/40991590479).
+
+The seed keeps 100,000 products and 300,000 barcode rows (three per product). One PACK barcode on product `B050001` is deliberately set to `000001`, while a different product's ID is changed to `000001`. This forces the original DAO's `WHERE BARCODE = ? OR m_barang.ID = ? ORDER BY BARCODE ASC LIMIT 1` to match both branches.
+
+The read-only parity check confirms:
+
+- Original DAO result: product `B050001`, barcode `000001`.
+- Naive ID-only split result: product `000001`, barcode `8999000000099999` — different from the original.
+- UNION ALL candidate result: product `B050001`, barcode `000001` — same as the original.
+
+| Query shape | Actual time |
+|---|---:|
+| Existing DAO OR query, product-ID input | 1,139 ms |
+| Existing DAO OR query, barcode input | 1,078 ms |
+| Naive split, product-ID input | 0.0331 ms |
+| Naive split, barcode input | 0.0199 ms |
+| UNION candidate, full product row, product-ID input | 0.0652 ms |
+| UNION candidate, full product row, barcode input | 0.0375 ms |
+| UNION candidate, full product row, overlapping input | 0.0798 ms |
+
+The UNION plan uses the product primary key for the ID branch and `idx_barcode_lookup` for the barcode branch, materializes only three or four candidate rows, then sorts those rows. This preserves the mapped product fields and original barcode ordering for the tested cases. The benchmark does not modify `BarangDaoImpl`; a production patch still requires review for nulls, duplicate barcodes, any hidden caller expectations and a build/runtime test.
 
 ## Continuation checkpoint (2026-10-29)
 
