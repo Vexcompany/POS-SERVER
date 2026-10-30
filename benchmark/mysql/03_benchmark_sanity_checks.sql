@@ -77,6 +77,15 @@ SELECT 'name prefix result count' AS check_name,
 FROM m_barang
 WHERE NAMA LIKE 'Produk Uji 050%';
 
+SELECT 'intentional cross-namespace collision row' AS check_name,
+       COUNT(*) AS actual_value,
+       1 AS expected_value,
+       IF(COUNT(*) = 1, 'PASS', 'FAIL') AS status
+FROM m_barcode
+WHERE M_BARANG_ID = 'B050001'
+  AND SATUAN = 'PACK'
+  AND BARCODE = '000001';
+
 SELECT 'products without exactly three barcodes' AS check_name,
        COUNT(*) AS actual_value,
        0 AS expected_value,
@@ -89,8 +98,8 @@ FROM (
     HAVING COUNT(bc.ID) <> 3
 ) AS mismatches;
 
--- Check candidate result parity for the two normal input formats before considering
--- any DAO rewrite. These checks compare the current OR query with its split lookup path.
+-- Compare the old DAO query with both the naive split and the UNION candidate
+-- for ordinary product-ID and barcode inputs.
 WITH old_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
     FROM m_barang AS b
@@ -106,15 +115,33 @@ split_result AS (
     WHERE b.ID = 'B050000'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B050000'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B050000' AND b.ID <> 'B050000'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
 )
-SELECT 'product ID input old-vs-split parity' AS check_name,
+SELECT 'product ID input old-vs-candidate parity' AS check_name,
        old_result.product_id AS old_product_id,
        split_result.product_id AS split_product_id,
-       old_result.barcode AS old_barcode,
-       split_result.barcode AS split_barcode,
+       union_result.product_id AS union_product_id,
        IF(old_result.product_id <=> split_result.product_id
-          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
-FROM old_result CROSS JOIN split_result;
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS naive_split_status,
+       IF(old_result.product_id <=> union_result.product_id
+          AND old_result.barcode <=> union_result.barcode, 'PASS', 'FAIL') AS union_status
+FROM old_result CROSS JOIN split_result CROSS JOIN union_result;
 
 WITH old_result AS (
     SELECT b.ID AS product_id, bc.BARCODE AS barcode
@@ -132,14 +159,90 @@ split_result AS (
     WHERE bc.BARCODE = '8999000000050000'
     ORDER BY bc.BARCODE ASC
     LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '8999000000050000'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '8999000000050000'
+      AND b.ID <> '8999000000050000'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
 )
-SELECT 'barcode input old-vs-split parity' AS check_name,
+SELECT 'barcode input old-vs-candidate parity' AS check_name,
        old_result.product_id AS old_product_id,
        split_result.product_id AS split_product_id,
-       old_result.barcode AS old_barcode,
-       split_result.barcode AS split_barcode,
+       union_result.product_id AS union_product_id,
        IF(old_result.product_id <=> split_result.product_id
-          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
-FROM old_result CROSS JOIN split_result;
+          AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS naive_split_status,
+       IF(old_result.product_id <=> union_result.product_id
+          AND old_result.barcode <=> union_result.barcode, 'PASS', 'FAIL') AS union_status
+FROM old_result CROSS JOIN split_result CROSS JOIN union_result;
+
+-- The original DAO OR query can match both a product ID and a barcode.
+-- The fixture deliberately maps BARCODE='000001' to product B050001 while product
+-- 000001 also exists. A naive ID-only split changes the result; the UNION candidate
+-- must preserve the old query's selected product and sort barcode.
+WITH old_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '000001' OR b.ID = '000001'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+split_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '000001'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '000001'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '000001' AND b.ID <> '000001'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
+)
+SELECT 'overlapping ID/barcode old-vs-UNION parity and split-path guard' AS check_name,
+       old_result.product_id AS old_product_id,
+       old_result.barcode AS old_barcode,
+       split_result.product_id AS naive_split_product_id,
+       split_result.barcode AS naive_split_barcode,
+       union_result.product_id AS union_product_id,
+       union_result.barcode AS union_barcode,
+       IF(
+         old_result.product_id <=> union_result.product_id
+         AND old_result.barcode <=> union_result.barcode
+         AND NOT (
+           old_result.product_id <=> split_result.product_id
+           AND old_result.barcode <=> split_result.barcode
+         ),
+         'PASS', 'FAIL'
+       ) AS status
+FROM old_result
+CROSS JOIN split_result
+CROSS JOIN union_result;
 
 -- This script is read-only and intentionally does not inspect or modify minimarket.

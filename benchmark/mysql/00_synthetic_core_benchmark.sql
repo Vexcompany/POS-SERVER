@@ -185,6 +185,15 @@ INSERT INTO m_barcode (M_BARANG_ID,SATUAN,BARCODE,CREATED,UPDATED)
 SELECT ID,'PACK',CONCAT('899920',LPAD(SUBSTRING(ID,2),10,'0')),NOW(),NOW()
 FROM m_barang;
 
+-- Intentional edge case: product ID 000001 also appears as a barcode on B050001.
+-- A numeric-leading value sorts before the generated 899... barcodes, making the old
+-- DAO ORDER BY choose the barcode match. Keep row counts and three barcodes per product.
+UPDATE m_barang SET ID = '000001' WHERE ID = 'B099999';
+UPDATE m_barcode SET M_BARANG_ID = '000001' WHERE M_BARANG_ID = 'B099999';
+UPDATE m_barcode
+SET BARCODE = '000001'
+WHERE M_BARANG_ID = 'B050001' AND SATUAN = 'PACK';
+
 ANALYZE TABLE m_barang, m_barcode, m_karyawan, m_role, m_jenis, m_cabang;
 
 -- Exact row counts (unlike information_schema.TABLES.TABLE_ROWS, which is estimated).

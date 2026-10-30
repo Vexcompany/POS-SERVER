@@ -35,6 +35,63 @@ EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_ba
 SELECT 'Split-path candidate with barcode input' AS test_name;
 EXPLAIN ANALYZE SELECT * FROM m_barang LEFT JOIN m_barcode ON m_barang.ID = m_barcode.M_BARANG_ID WHERE BARCODE = '8999000000050000' ORDER BY BARCODE ASC LIMIT 1;
 
+-- A UNION ALL candidate keeps the primary-key and barcode indexes usable while
+-- preserving the original OR query's result set. The second branch excludes the
+-- product-ID row already emitted by the first branch, avoiding duplicate joined rows.
+-- Project b.* because BarangRowMapper consumes the complete product row; the extra
+-- sort_barcode value replaces the joined barcode columns that the mapper ignores.
+SELECT 'Semantics-preserving UNION candidate with product ID input' AS test_name;
+EXPLAIN ANALYZE
+SELECT candidates.*
+FROM (
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B050000'
+    UNION ALL
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B050000' AND b.ID <> 'B050000'
+) AS candidates
+ORDER BY sort_barcode ASC
+LIMIT 1;
+
+SELECT 'Semantics-preserving UNION candidate with barcode input' AS test_name;
+EXPLAIN ANALYZE
+SELECT candidates.*
+FROM (
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '8999000000050000'
+    UNION ALL
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '8999000000050000'
+      AND b.ID <> '8999000000050000'
+) AS candidates
+ORDER BY sort_barcode ASC
+LIMIT 1;
+
+SELECT 'Semantics-preserving UNION candidate with overlapping ID/barcode input (numeric-first collision)' AS test_name;
+EXPLAIN ANALYZE
+SELECT candidates.*
+FROM (
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = '000001'
+    UNION ALL
+    SELECT b.*, bc.BARCODE AS sort_barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = '000001' AND b.ID <> '000001'
+) AS candidates
+ORDER BY sort_barcode ASC
+LIMIT 1;
+
 SELECT 'Rack prefix lookup' AS test_name;
 EXPLAIN ANALYZE SELECT ID, NAMA, RAK_TOKO FROM m_barang WHERE RAK_TOKO LIKE 'T-050%' ORDER BY RAK_TOKO LIMIT 500;
 
