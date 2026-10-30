@@ -26,9 +26,9 @@ Creating an empty database called minimarket does not create the operational sch
 - Removed the benchmark-only UNIQUE constraint on barcode and the foreign key from m_barcode to m_barang; neither constraint is proven by DAO source. Barcode lookup still has a non-unique index.
 - Removed the misleading unique constraint on m_role(role, menu); the source uses that pair for lookup/update but does not establish uniqueness.
 - Preserved the observed legacy idx_barang_barcode_search index as (M_JENIS_JENIS, STOK_TOKO). Its name is misleading: it does not index BARCODE and is not used as the barcode lookup index.
-- Query profiling now separates barcode lookup from product-ID lookup. The prior OR predicate could let the optimizer choose the primary-key branch and conceal barcode-index behavior.
+- Query profiling separates barcode and product-ID access paths. A naive split-by-input-type is fast for normal inputs but is not semantically equivalent if one string exists as both a product ID and another product's barcode. The fixture now includes that collision and tests a UNION ALL candidate that excludes the duplicate product-ID branch while preserving the original ORDER BY result.
 - Added a prefix-name query that matches the generated Produk Uji 050000 naming scheme, alongside a deliberate leading-wildcard contains query. Storage metadata labels TABLE_ROWS as an estimate.
-- Added 03_benchmark_sanity_checks.sql to check exact fixture counts, the known B050000 barcode, the prefix-query count and the three-barcode-per-product invariant before profiling.
+- Added 03_benchmark_sanity_checks.sql checks for exact fixture counts, the known B050000 barcode, the prefix-query count, the three-barcode-per-product invariant, the intentional cross-namespace collision, and old-query/UNION candidate parity. It also asserts that the naive split path differs in the collision case.
 
 The m_barang definitions above are backed by the user's supplied SHOW CREATE TABLE / SHOW INDEX output for the benchmark table. This is table-specific evidence, not a complete production DDL. The other five fixture tables still use explicitly labeled synthetic choices. The benchmark remains non-operational and cannot be imported into minimarket as a complete LOCAL schema.
 
