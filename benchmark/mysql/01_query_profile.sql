@@ -73,19 +73,19 @@ FROM (
 ORDER BY sort_barcode ASC
 LIMIT 1;
 
-SELECT 'Semantics-preserving UNION candidate with overlapping ID/barcode input' AS test_name;
+SELECT 'Semantics-preserving UNION candidate with overlapping ID/barcode input (numeric-first collision)' AS test_name;
 EXPLAIN ANALYZE
 SELECT product_id, sort_barcode
 FROM (
     SELECT b.ID AS product_id, bc.BARCODE AS sort_barcode
     FROM m_barang AS b
     LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
-    WHERE b.ID = 'B099999'
+    WHERE b.ID = '000001'
     UNION ALL
     SELECT b.ID AS product_id, bc.BARCODE AS sort_barcode
     FROM m_barcode AS bc
     JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
-    WHERE bc.BARCODE = 'B099999' AND b.ID <> 'B099999'
+    WHERE bc.BARCODE = '000001' AND b.ID <> '000001'
 ) AS candidates
 ORDER BY sort_barcode ASC
 LIMIT 1;
