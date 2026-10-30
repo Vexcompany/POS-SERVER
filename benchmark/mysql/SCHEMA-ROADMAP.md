@@ -80,6 +80,27 @@ Observed EXPLAIN ANALYZE times on that GitHub-hosted runner (not the VPS):
 
 The combined DAO query was profiled with the same input value bound to both OR predicates, matching the source shape. In this run, separate lookup paths were roughly tens of thousands of times faster than the joined OR query. This is a strong optimization candidate, not a production patch. The read-only fixture script now checks result parity for normal product-ID and barcode inputs; unusual overlapping ID/barcode values, null behavior and full application integration still need review before a separate DAO change can be built/tested. CI timings are environment/cache dependent and are not a VPS performance guarantee.
 
+## DDL-aligned synthetic CI baseline (2026-10-30)
+
+The updated seed and DDL-contract sanity checks passed in isolated GitHub Actions MySQL 8.4.13 run [#40991006496](https://github.com/Vexcompany/POS-SERVER/actions/runs/40991006496). This run is after aligning m_barang numeric/timestamp types and preserving the observed legacy composite index. It is a GitHub-hosted runner measurement, not a VPS result.
+
+| Query shape | Actual time |
+|---|---:|
+| Exact product ID | 0.0049 ms |
+| Product name prefix, 50 rows | 0.0736 ms |
+| Product name contains, leading wildcard | 6.51 ms |
+| Exact barcode | 0.0151 ms |
+| Barcode + product join | 0.0310 ms |
+| Existing DAO OR query, product-ID input | 818 ms |
+| Existing DAO OR query, barcode input | 799 ms |
+| Split-path product-ID candidate | 0.0428 ms |
+| Split-path barcode candidate | 0.0325 ms |
+| Rack prefix, 400 rows | 1.79 ms |
+
+All DDL contract checks passed, including DECIMAL precision, BIGINT timestamp columns, and the observed `idx_barang_barcode_search (M_JENIS_JENIS, STOK_TOKO)` shape. Fixture checks also passed: 100,000 products, 300,000 barcodes, 1,000 prefix matches, known B050000 barcode, three barcodes per product, and normal-input old-vs-split result parity.
+
+The OR query still scans all 100,000 products and expands 300,000 joined barcode rows before filtering/sorting. The split candidates remain dramatically faster in this synthetic fixture, but the timings vary by runner/cache and do not prove that a production DAO rewrite is safe. The previous 2026-10-29 baseline is retained above for historical comparison; do not compare these runs as a controlled before/after unless hardware, cache and schema are held constant.
+
 ## Continuation checkpoint (2026-10-29)
 
 - Repo-side benchmark corrections and source inventory were merged via [PR #9](https://github.com/Vexcompany/POS-SERVER/pull/9).
