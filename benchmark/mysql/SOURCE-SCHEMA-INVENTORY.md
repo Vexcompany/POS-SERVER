@@ -60,15 +60,27 @@ StockCommitDaoImpl calls procedures including sp_read_all_stock_commit, sp_read_
 
 The online schema minimarket_online is a separate dependency used by online connection/synchronization code. It is not the LOCAL schema and is not created by the six-table benchmark.
 
+## Additional physical DDL evidence supplied from the VPS
+
+The user supplied a successful `SHOW CREATE TABLE m_barang` and `SHOW INDEX FROM m_barang` result for the synthetic benchmark table. That output establishes the following physical definitions for that observed table (not for every v29 installation):
+
+- `KONVERSI_21` and `KONVERSI_32`: `DECIMAL(14,3)`.
+- `BATAS_ATAS_STOCK`, `REORDER_POINT`, and stock quantities: `DECIMAL(14,3)`.
+- `HARGA_JUAL_1..3` and `HPP`: `DECIMAL(14,2)`.
+- `HPP_UPDATED`, `CREATED`, and `UPDATED`: `BIGINT`.
+- The observed legacy index named `idx_barang_barcode_search` is actually `(M_JENIS_JENIS, STOK_TOKO)`; its name does not mean it indexes `BARCODE`.
+
+This is stronger evidence than inferring SQL types from Java getters. In particular, `BarangRowMapper` calls `getDate()` for `CREATED/UPDATED`, but the supplied DDL shows those columns are BIGINT in this database. A RowMapper accessor does not prove the physical SQL type. The benchmark now mirrors these observed `m_barang` definitions and preserves the legacy index shape. No equivalent physical DDL evidence has been supplied for the other five fixture tables.
+
 ## Benchmark schema decisions
 
 The synthetic benchmark is intentionally limited to m_cabang, m_jenis, m_karyawan, m_role, m_barang, and m_barcode.
 
-- Date-like columns read with ResultSet.getDate(...) are seeded as DATETIME/NOW() in this disposable fixture. That choice follows Java access patterns but does not establish the original physical SQL type; confirm it against the schema export. m_barang.HPP_UPDATED remains numeric because BarangDaoImpl explicitly writes UNIX_TIMESTAMP() to it.
+- For m_barang, the fixture now matches the supplied physical DDL: decimal quantity/price columns and BIGINT HPP_UPDATED/CREATED/UPDATED. The BIGINT CREATED/UPDATED definitions are retained despite getDate() in BarangRowMapper because the observed SHOW CREATE TABLE is stronger evidence than a Java getter. For the other fixture tables, DATETIME remains a clearly labeled fixture choice until their original DDL is available. HPP_UPDATED remains numeric because BarangDaoImpl explicitly writes UNIX_TIMESTAMP() to it.
 - m_barcode.ID is INT in line with BarcodeRowMapper.getInt("ID").
 - Barcode uniqueness and a foreign key are not imposed because they are not established by DAO source evidence.
 - m_role(role, menu) is indexed but not declared unique because uniqueness is not established by DAO source evidence.
-- The index formerly named idx_barang_barcode_search was removed because its columns did not match the barcode lookup query.
+- The observed legacy index idx_barang_barcode_search is retained as (M_JENIS_JENIS, STOK_TOKO). Despite its misleading name, it is not a barcode index; the actual barcode lookup uses m_barcode.BARCODE.
 
 The indexes retained in the seed are benchmark candidates selected from observed DAO query shapes, not verified production indexes. These choices improve consistency with observed source behavior but do not prove that the benchmark DDL equals the original production DDL.
 
