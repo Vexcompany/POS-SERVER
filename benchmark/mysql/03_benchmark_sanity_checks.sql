@@ -77,6 +77,15 @@ SELECT 'name prefix result count' AS check_name,
 FROM m_barang
 WHERE NAMA LIKE 'Produk Uji 050%';
 
+SELECT 'intentional cross-namespace collision row' AS check_name,
+       COUNT(*) AS actual_value,
+       1 AS expected_value,
+       IF(COUNT(*) = 1, 'PASS', 'FAIL') AS status
+FROM m_barcode
+WHERE M_BARANG_ID = 'B050001'
+  AND SATUAN = 'PACK'
+  AND BARCODE = 'B099999';
+
 SELECT 'products without exactly three barcodes' AS check_name,
        COUNT(*) AS actual_value,
        0 AS expected_value,
@@ -141,5 +150,62 @@ SELECT 'barcode input old-vs-split parity' AS check_name,
        IF(old_result.product_id <=> split_result.product_id
           AND old_result.barcode <=> split_result.barcode, 'PASS', 'FAIL') AS status
 FROM old_result CROSS JOIN split_result;
+
+-- The original DAO OR query can match both a product ID and a barcode.
+-- The fixture deliberately maps BARCODE='B099999' to product B050001 while product
+-- B099999 also exists. A naive ID-only split changes the result; the UNION candidate
+-- must preserve the old query's selected product and sort barcode.
+WITH old_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B099999' OR b.ID = 'B099999'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+split_result AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B099999'
+    ORDER BY bc.BARCODE ASC
+    LIMIT 1
+),
+union_candidates AS (
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barang AS b
+    LEFT JOIN m_barcode AS bc ON b.ID = bc.M_BARANG_ID
+    WHERE b.ID = 'B099999'
+    UNION ALL
+    SELECT b.ID AS product_id, bc.BARCODE AS barcode
+    FROM m_barcode AS bc
+    JOIN m_barang AS b ON b.ID = bc.M_BARANG_ID
+    WHERE bc.BARCODE = 'B099999' AND b.ID <> 'B099999'
+),
+union_result AS (
+    SELECT product_id, barcode
+    FROM union_candidates
+    ORDER BY barcode ASC
+    LIMIT 1
+)
+SELECT 'overlapping ID/barcode old-vs-UNION parity and split-path guard' AS check_name,
+       old_result.product_id AS old_product_id,
+       old_result.barcode AS old_barcode,
+       split_result.product_id AS naive_split_product_id,
+       split_result.barcode AS naive_split_barcode,
+       union_result.product_id AS union_product_id,
+       union_result.barcode AS union_barcode,
+       IF(
+         old_result.product_id <=> union_result.product_id
+         AND old_result.barcode <=> union_result.barcode
+         AND NOT (
+           old_result.product_id <=> split_result.product_id
+           AND old_result.barcode <=> split_result.barcode
+         ),
+         'PASS', 'FAIL'
+       ) AS status
+FROM old_result
+CROSS JOIN split_result
+CROSS JOIN union_result;
 
 -- This script is read-only and intentionally does not inspect or modify minimarket.
